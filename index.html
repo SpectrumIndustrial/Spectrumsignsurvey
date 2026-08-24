@@ -92,7 +92,7 @@ body{overflow:hidden}
   flex:none;order:3;z-index:50;background:rgba(255,255,255,.94);
   backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
   border-top:1px solid var(--rule);
-  display:grid;grid-template-columns:repeat(4,1fr);
+  display:grid;grid-template-columns:repeat(5,1fr);
   padding-bottom:env(safe-area-inset-bottom);
 }
 .nav button{
@@ -357,7 +357,7 @@ body{overflow:hidden}
   body{font-size:15.5px}
   .nav{
     order:1;max-width:960px;margin:0 auto;
-    grid-template-columns:repeat(4,auto);justify-content:start;gap:2px;
+    grid-template-columns:repeat(5,auto);justify-content:start;gap:2px;
     background:var(--card);padding:0 10px;border-top:none;border-bottom:1px solid var(--rule);
     backdrop-filter:none;-webkit-backdrop-filter:none;z-index:39
   }
@@ -655,6 +655,17 @@ html.dark .toast .toast-act{color:#9FE0FF}
 .menurow{display:flex;gap:8px;margin-bottom:8px}
 .menurow .btn{flex:1}
 
+/* ---- guide: category legend ---- */
+.legendgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.legendcard{
+  background:var(--card);border:1px solid var(--rule);border-radius:13px;
+  padding:13px 12px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:flex-start
+}
+.legendcard .iso{flex:none;margin-top:1px}
+.legendcard h3{font-size:13px;font-weight:700;letter-spacing:-.006em;line-height:1.25;margin-bottom:3px}
+.legendcard p{font-size:11.5px;line-height:1.4;color:var(--ink-45)}
+@media (min-width:560px){.legendgrid{grid-template-columns:repeat(3,1fr)}}
+
 /* ---- scrollable lists: thin, unobtrusive scrollbar on desktop ---- */
 .sheet-list{scrollbar-width:thin}
 .sheet-list::-webkit-scrollbar{width:8px}
@@ -695,6 +706,10 @@ html.dark .toast .toast-act{color:#9FE0FF}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
       <span>Report</span>
     </button>
+    <button data-tab="guide" role="tab" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-2.2-1.7-4.9-2-7.5-2v13.5c2.6 0 5.3.3 7.5 2 2.2-1.7 4.9-2 7.5-2V5c-2.6 0-5.3.3-7.5 2z"/><path d="M12 7v13.5"/></svg>
+      <span>Guide</span>
+    </button>
   </nav>
 
   <main class="scroller" id="scroller">
@@ -702,6 +717,7 @@ html.dark .toast .toast-act{color:#9FE0FF}
     <section class="screen" id="s-parts"></section>
     <section class="screen" id="s-photos"></section>
     <section class="screen" id="s-report"></section>
+    <section class="screen" id="s-guide"></section>
   </main>
 </div>
 
@@ -1868,6 +1884,94 @@ function renderReport() {
   function tot(n, l) { return '<div><div class="tn">' + n + '</div><div class="tl">' + l + '</div></div>'; }
 }
 
+/* ================= GUIDE ================= */
+/* Reference material built entirely from TPL/CATNAME — the same data that
+   drives "Add a sign" — so it can never drift out of sync with what the
+   survey actually checks against. */
+var GUIDE_CAT_DESC = {
+  P: "Red circle with a diagonal bar. An action that must not be carried out.",
+  M: "Blue circle. An action that must be carried out — PPE, most often.",
+  W: "Yellow triangle, black border. A hazard to be aware of close by.",
+  S: "Green rectangle. The safe route, an exit, or first-aid provision.",
+  F: "Red rectangle. Marks the location of fire-fighting equipment.",
+  N: "Required by law, but without a standard pictogram or colour."
+};
+var GQ = "";
+function renderGuide() {
+  var zones = 0, seen = {};
+  for (var zi = 0; zi < TPL.length; zi++) if (!seen[TPL[zi][0]]) { seen[TPL[zi][0]] = 1; zones++; }
+  var h = '<h1 style="margin:2px 0 4px">Sign &amp; regulation guide</h1>'
+    + '<p class="hint" style="margin-top:0">' + TPL.length + ' signs across ' + zones
+    + ' areas of a typical site — what each one looks like, and the regulation it relates to.</p>'
+    + '<div class="searchwrap" style="position:static;padding:2px 0 4px;margin:0"><div class="searchbar">'
+    + ic("search", 18, "mag")
+    + '<input id="gq" type="search" placeholder="Search signs or regulations" autocomplete="off" '
+    + 'autocorrect="off" autocapitalize="none" spellcheck="false">'
+    + '<button class="clr" id="gClr" aria-label="Clear search" hidden>' + ic("x", 16) + '</button>'
+    + '</div></div>'
+    + '<div id="guideLegend"></div>'
+    + '<div id="guideList"></div>'
+    + '<p class="hint" style="margin-top:22px">This guide mirrors the standard sign set built into this app. '
+    + 'Treat it as a quick reference — always confirm current requirements against the full regulation text '
+    + 'and your site’s own risk assessment.</p>';
+  $("#s-guide").innerHTML = h;
+  $("#gq").value = GQ;
+  renderGuideLegend();
+  renderGuideList();
+}
+function renderGuideLegend() {
+  var el = $("#guideLegend"); if (!el) return;
+  if (GQ.trim()) { el.innerHTML = ""; return; }
+  var cats = ["P", "M", "W", "S", "F", "N"], h =
+    '<div class="sectionhead" style="margin-top:16px"><span class="eyebrow">How to read a sign</span><span class="line"></span></div>'
+    + '<div class="legendgrid">';
+  for (var i = 0; i < cats.length; i++) {
+    var k = cats[i];
+    h += '<div class="legendcard">' + isoBadge(k, 34)
+       + '<div><h3>' + esc(CATNAME[k]) + '</h3><p>' + esc(GUIDE_CAT_DESC[k]) + '</p></div></div>';
+  }
+  el.innerHTML = h + '</div>';
+}
+function renderGuideList() {
+  var el = $("#guideList"); if (!el) return;
+  var a = area(), q = GQ.trim().toLowerCase(), terms = q ? q.split(/\s+/) : [];
+  var zone = null, shown = 0, list = "";
+  for (var i = 0; i < TPL.length; i++) {
+    var t = TPL[i];
+    if (terms.length) {
+      var hay = (t[0] + " " + t[1] + " " + t[4] + " " + CATNAME[t[2]]).toLowerCase(), ok = true;
+      for (var ti = 0; ti < terms.length; ti++) if (hay.indexOf(terms[ti]) < 0) { ok = false; break; }
+      if (!ok) continue;
+    }
+    if (t[0] !== zone) { zone = t[0]; list += '<div class="zone-head"><span class="eyebrow">' + esc(zone) + '</span><span class="line"></span></div>'; }
+    list += guideCard(i, t, a);
+    shown++;
+  }
+  var h = '<div class="sectionhead" style="margin-top:' + (q ? "6" : "24") + 'px">'
+    + '<span class="eyebrow">' + (q ? shown + (shown === 1 ? " sign" : " signs") + " found" : "All required signs") + '</span>'
+    + '<span class="line"></span></div>';
+  h += shown ? list : empty("search", "No signs match", "Try a different word, or check the spelling.");
+  el.innerHTML = h;
+}
+function guideCard(idx, t, a) {
+  var already = false;
+  if (a) for (var i = 0; i < a.signs.length; i++) if (a.signs[i].tpl === idx) already = true;
+  return '<article class="item">'
+    + '<div class="item-top">' + isoBadge(t[2])
+    +   '<div class="item-body">'
+    +     '<div class="item-name">' + esc(t[1]) + '</div>'
+    +     '<div class="item-meta"><span class="tag ' + (t[3] ? 't-stat">Statutory' : 't-rec">Advisory') + '</span>'
+    +       '<span>' + esc(CATNAME[t[2]]) + '</span></div>'
+    +     (t[4] ? '<div class="legal">' + esc(t[4]) + '</div>' : "")
+    +   '</div>'
+    + '</div>'
+    + (a ? '<div class="followup">' + (already
+          ? '<span class="linked">' + ic("check", 14) + 'In ' + esc(a.name) + '</span>'
+          : '<button class="btn-find ghost" data-guideadd="' + idx + '">' + ic("plus", 15) + 'Add to ' + esc(a.name) + '</button>')
+        + '</div>' : "")
+    + '</article>';
+}
+
 /* ================= SHEETS ================= */
 function openSheet(html) { $("#sheet").innerHTML = html; $("#overlay").classList.add("on"); }
 function closeSheet() { $("#overlay").classList.remove("on"); }
@@ -2716,6 +2820,20 @@ document.addEventListener("click", function (e) {
   }
   if (t.closest("#clearRef")) { pendingSign = null; renderRefNote(); return; }
   if (t.closest("#more")) { shown += LIMIT; renderResults(); return; }
+  if (t.closest("#gClr")) {
+    GQ = ""; var gqi = $("#gq"); if (gqi) { gqi.value = ""; gqi.focus(); }
+    var gc2 = $("#gClr"); if (gc2) gc2.hidden = true;
+    renderGuideLegend(); renderGuideList(); return;
+  }
+  if ((b = t.closest("[data-guideadd]"))) {
+    var ga = area();
+    if (!ga) { toast("Open or add an area first", true); return; }
+    var gidx = +b.dataset.guideadd, dup = false;
+    for (var gi = 0; gi < ga.signs.length; gi++) if (ga.signs[gi].tpl === gidx) dup = true;
+    if (!dup) { ga.signs.push(makeSign(gidx)); save(); toast("Added to " + ga.name); }
+    renderGuideList(); badges();
+    return;
+  }
   if (t.closest("#addCustom")) { openCustomProduct(); return; }
   if (t.closest("#shoot")) { $("#fileIn").click(); return; }
   if ((b = t.closest("[data-pick]"))) {
@@ -2786,6 +2904,12 @@ document.addEventListener("input", function (e) {
     t._d = setTimeout(function () { renderResults(); }, 110);
     return;
   }
+  if (t.id === "gq") {
+    GQ = t.value;
+    var gc = $("#gClr"); if (gc) gc.hidden = !GQ;
+    renderGuideLegend(); renderGuideList();
+    return;
+  }
   if (t.dataset.qty != null && a) {
     var id = +t.dataset.qty;
     for (var i = 0; i < a.signs.length; i++) if (a.signs[i].id === id) a.signs[i].qty = Math.max(1, +t.value || 1);
@@ -2808,11 +2932,12 @@ function render() {
   if (TAB === "survey") renderSurvey();
   else if (TAB === "parts") renderParts();
   else if (TAB === "photos") renderPhotos();
+  else if (TAB === "guide") renderGuide();
   else renderReport();
   badges();
   var a = area();
-  $("#ctxLabel").textContent = a ? a.name : (S.site || "Signage survey");
-  $("#ctxLabel").className = "ctx" + (a ? " inarea" : "");
+  $("#ctxLabel").textContent = TAB === "guide" ? "Sign guide" : (a ? a.name : (S.site || "Signage survey"));
+  $("#ctxLabel").className = "ctx" + (a && TAB !== "guide" ? " inarea" : "");
 }
 
 /* ================= THEME ================= */
