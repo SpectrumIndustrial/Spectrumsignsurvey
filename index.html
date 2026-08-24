@@ -1175,37 +1175,45 @@ function ensureCatalogue() {
 }
 
 /* ---------- sign library ---------- */
+/* 6th element (where present) is an ISO 7010-style pictogram key, drawn in
+   isoBadge() — matched against the standard's own codes: P002 (smoking),
+   E001 (running man), E003 (first aid), E007 (assembly), M003 (ear
+   protection), M004 (eye protection), M008 (foot protection), W012
+   (electricity), W014 (forklift trucks), W021 (flammable material), F001
+   (fire extinguisher), F005 (fire alarm call point). Signs with no fixed
+   ISO pictogram (statutory notices — HSE poster, insurance certificate,
+   sign-in sheet, load notice) correctly keep the plain notice glyph. */
 var TPL = [
-["Site entrance & perimeter","No smoking / e-cigarettes sign","P",1,"Health Act 2006"],
+["Site entrance & perimeter","No smoking / e-cigarettes sign","P",1,"Health Act 2006","smoking"],
 ["Site entrance & perimeter","Visitor sign-in / induction sign","N",0,"Best practice"],
 ["Reception & offices","HSE 'Health and Safety Law' poster","N",1,"H&S Information for Employees Regs 1989"],
 ["Reception & offices","Employers' Liability Insurance certificate","N",1,"Employers' Liability (Compulsory Insurance) Regs 1998"],
 ["Reception & offices","Fire action notice","N",1,"RRFSO 2005, Art 14"],
-["Reception & offices","First aid location & first aider info","S",1,"H&S (First Aid) Regs 1981"],
-["Corridors & stairwells","Directional fire exit (running man)","S",1,"SSSR 1996 / BS 5499-4"],
-["Corridors & stairwells","Fire door — keep shut","M",1,"Approved Doc B / BS 5499"],
-["Fire exit doors","Push bar to open / keep clear","M",1,"RRFSO 2005"],
-["Production & work areas","Eye protection must be worn","M",1,"SSSR 1996, Sch 1"],
-["Production & work areas","Hearing protection must be worn","M",1,"Control of Noise at Work Regs 2005"],
-["Production & work areas","Safety footwear / hi-vis must be worn","M",1,"SSSR 1996"],
-["Production & work areas","Moving machinery / crush hazard","W",1,"SSSR 1996 + PUWER 1998"],
-["Production & work areas","Emergency stop / isolation point","M",1,"PUWER 1998"],
-["Storage & warehouse","Forklift operating area","W",1,"PUWER 1998"],
-["Storage & warehouse","Pedestrian route","M",1,"Workplace (H,S&W) Regs 1992"],
+["Reception & offices","First aid location & first aider info","S",1,"H&S (First Aid) Regs 1981","firstaid"],
+["Corridors & stairwells","Directional fire exit (running man)","S",1,"SSSR 1996 / BS 5499-4","runningman"],
+["Corridors & stairwells","Fire door — keep shut","M",1,"Approved Doc B / BS 5499","doorshut"],
+["Fire exit doors","Push bar to open / keep clear","M",1,"RRFSO 2005","pushbar"],
+["Production & work areas","Eye protection must be worn","M",1,"SSSR 1996, Sch 1","eyes"],
+["Production & work areas","Hearing protection must be worn","M",1,"Control of Noise at Work Regs 2005","ears"],
+["Production & work areas","Safety footwear / hi-vis must be worn","M",1,"SSSR 1996","footwear"],
+["Production & work areas","Moving machinery / crush hazard","W",1,"SSSR 1996 + PUWER 1998","crush"],
+["Production & work areas","Emergency stop / isolation point","M",1,"PUWER 1998","stop"],
+["Storage & warehouse","Forklift operating area","W",1,"PUWER 1998","forklift"],
+["Storage & warehouse","Pedestrian route","M",1,"Workplace (H,S&W) Regs 1992","pedestrian"],
 ["Storage & warehouse","Racking maximum load","N",0,"HSE storage guidance"],
-["Chemical & COSHH store","Hazardous / flammable material","W",1,"DSEAR 2002"],
-["Chemical & COSHH store","No smoking / no naked flames","P",1,"DSEAR 2002"],
-["Compressed gas store","Compressed gas storage","W",1,"DSEAR 2002 / BCGA"],
-["Plant room & electrical","Danger — electric shock risk","W",1,"Electricity at Work Regs 1989"],
-["Plant room & electrical","No unauthorised access","P",1,"HSWA 1974"],
-["Loading bay & yard","Vehicle movement / reversing","W",1,"Workplace (H,S&W) Regs 1992"],
-["Loading bay & yard","Pedestrian crossing point","M",1,"Workplace (H,S&W) Regs 1992"],
-["Fire equipment","Extinguisher ID (CO2 / foam / water)","F",1,"SSSR 1996"],
-["Fire equipment","Fire alarm call point","F",1,"SSSR 1996"],
-["Assembly points","Fire assembly point","S",1,"RRFSO 2005"],
-["Canteen & welfare","No smoking","P",1,"Health Act 2006"],
-["Confined spaces","Entry by permit only","W",1,"Confined Spaces Regs 1997"],
-["Height & roof access","Authorised persons only / fall hazard","W",1,"Work at Height Regs 2005"]
+["Chemical & COSHH store","Hazardous / flammable material","W",1,"DSEAR 2002","flame"],
+["Chemical & COSHH store","No smoking / no naked flames","P",1,"DSEAR 2002","flame"],
+["Compressed gas store","Compressed gas storage","W",1,"DSEAR 2002 / BCGA","cylinder"],
+["Plant room & electrical","Danger — electric shock risk","W",1,"Electricity at Work Regs 1989","electric"],
+["Plant room & electrical","No unauthorised access","P",1,"HSWA 1974","noentry"],
+["Loading bay & yard","Vehicle movement / reversing","W",1,"Workplace (H,S&W) Regs 1992","vehicle"],
+["Loading bay & yard","Pedestrian crossing point","M",1,"Workplace (H,S&W) Regs 1992","pedestrian"],
+["Fire equipment","Extinguisher ID (CO2 / foam / water)","F",1,"SSSR 1996","extinguisher"],
+["Fire equipment","Fire alarm call point","F",1,"SSSR 1996","callpoint"],
+["Assembly points","Fire assembly point","S",1,"RRFSO 2005","assembly"],
+["Canteen & welfare","No smoking","P",1,"Health Act 2006","smoking"],
+["Confined spaces","Entry by permit only","W",1,"Confined Spaces Regs 1997","permit"],
+["Height & roof access","Authorised persons only / fall hazard","W",1,"Work at Height Regs 2005","fall"]
 ];
 var CATNAME = {P:"Prohibition",M:"Mandatory",W:"Warning",S:"Safe condition",F:"Fire equipment",N:"Statutory notice"};
 
@@ -1224,15 +1232,68 @@ var PRESETS = [
 ];
 
 /* ---------- ISO 7010 badges ---------- */
-function isoBadge(k, size) {
+/* Specific pictograms layered inside the category badge below, one per
+   ISO 7010-style icon key referenced from TPL. Drawn as simplified original
+   interpretations (not traced from the standard's own artwork) using
+   currentColor, so the same definition works on any category background —
+   see the TPL comment above for which official code each is modelled on. */
+var SIGN_ICONS = {
+  smoking: '<rect x="6" y="15" width="16" height="3" rx="1" fill="currentColor"/><path d="M23 12.3c1.3 1.1 1.3 2.7 0 3.8" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  firstaid: '<path d="M16 9v14M9 16h14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>',
+  runningman: '<circle cx="12.5" cy="9" r="2.3" fill="currentColor"/><path d="M12.5 12l-3.5 3 2 1.2-1 6.3M12.5 12l4 1.5-.5 5 3 3.5M9.5 16l-3 1.5" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 16h5M23 13l3 3-3 3" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  doorshut: '<path d="M12 15v-2.2a4 4 0 0 1 8 0V15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="9.5" y="15" width="13" height="9.5" rx="1.5" fill="currentColor"/>',
+  pushbar: '<rect x="7" y="14.5" width="12" height="3" rx="1.5" fill="currentColor"/><path d="M21.5 16h4M23 13.2l3 2.8-3 2.8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  eyes: '<circle cx="12" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="16" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 13.5 4.5 12M24.5 13.5l3-1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  ears: '<path d="M9 15a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="7" y="14" width="4" height="7" rx="2" fill="currentColor"/><rect x="21" y="14" width="4" height="7" rx="2" fill="currentColor"/>',
+  footwear: '<rect x="12" y="8" width="5" height="10" rx="1" fill="currentColor"/><path d="M12 18h5l7 3.2c1.3.5 1.3 2.3 0 2.3H9v-3.7z" fill="currentColor"/>',
+  crush: '<circle cx="16" cy="16" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><path d="M16 8v2.6M16 21.4V24M24 16h-2.6M10.6 16H8M21.7 10.3l-1.8 1.8M12.1 19.9l-1.8 1.8M21.7 21.7l-1.8-1.8M12.1 12.1l-1.8-1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  stop: '<circle cx="16" cy="17" r="5.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 10v5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  forklift: '<rect x="10" y="14" width="8" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M18 10v10M20 10v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 19h4v2h-4z" fill="currentColor"/><circle cx="12" cy="21.5" r="1.6" fill="currentColor"/><circle cx="17" cy="21.5" r="1.6" fill="currentColor"/>',
+  pedestrian: '<circle cx="16" cy="9.5" r="2.2" fill="currentColor"/><path d="M16 12v6M16 12l-3.5 2.5M16 12l3.5 2M16 18l-3 6M16 18l3.5 5.5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  flame: '<path d="M16 8c2 3 .3 4.3-.6 5.7-1.1 1.7-2.4 2.8-2.4 5a3 3 0 0 0 6 0c0-1.1-.4-1.9-.4-1.9 1.8 1 2.5 2.7 2.5 4.1a5 5 0 0 1-10 0C11.1 15.5 16 14.6 16 8z" fill="currentColor"/>',
+  cylinder: '<rect x="12" y="11" width="8" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14.5" y="7" width="3" height="4" fill="currentColor"/><path d="M12 16h8" stroke="currentColor" stroke-width="1.5"/>',
+  electric: '<path d="M17.5 7 10 18h5l-1.5 7 8-12h-5.5z" fill="currentColor"/>',
+  noentry: '<circle cx="16" cy="10" r="2.6" fill="currentColor"/><path d="M11 24l1.5-8a3.5 3.5 0 0 1 3.5-3 3.5 3.5 0 0 1 3.5 3l1.5 8" fill="currentColor"/>',
+  vehicle: '<rect x="7" y="14" width="12" height="6" rx="1" fill="currentColor"/><path d="M19 15h4l2 3v2h-6z" fill="currentColor"/><circle cx="11" cy="21.5" r="1.8" fill="currentColor"/><circle cx="20.5" cy="21.5" r="1.8" fill="currentColor"/>',
+  extinguisher: '<rect x="12" y="12" width="7" height="12" rx="2" fill="currentColor"/><rect x="13.5" y="8" width="4" height="3" rx="1" fill="currentColor"/><path d="M19 14l4-2M21 10v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
+  callpoint: '<rect x="9" y="9" width="14" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="2.6" fill="currentColor"/><path d="M16 9v2M16 21v2M9 16h2M21 16h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  assembly: '<circle cx="12" cy="12.5" r="2.8" fill="currentColor"/><circle cx="20" cy="12.5" r="2.8" fill="currentColor"/>'
+    + '<circle cx="11" cy="20.5" r="2.8" fill="currentColor"/><circle cx="21" cy="20.5" r="2.8" fill="currentColor"/>'
+    + '<circle cx="16" cy="16.5" r="2.8" fill="currentColor"/>',
+  permit: '<rect x="9" y="8" width="10" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 12h6M11 15h6M11 18h4" stroke="currentColor" stroke-width="1.4"/><rect x="18" y="17" width="6" height="6" rx="1" fill="currentColor"/><path d="M19.5 17v-1.5a1.5 1.5 0 0 1 3 0V17" stroke="currentColor" stroke-width="1.4" fill="none"/>',
+  fall: '<path d="M6 24h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="10" r="2.2" fill="currentColor"/><path d="M20 13l3 4-2 1 2 5M20 13l-3 3 1 2-3 4" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+function isoBadge(k, size, iconKey) {
   var st = size ? ' style="width:' + size + 'px;height:' + size + 'px"' : "";
   var s = '<span class="iso"' + st + ' title="' + CATNAME[k] + '" aria-hidden="true">';
-  if (k === "P") s += '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#fff" stroke="#C8102E" stroke-width="5"/><rect x="13.2" y="1.6" width="5.6" height="28.8" fill="#C8102E" transform="rotate(45 16 16)"/></svg>';
-  else if (k === "M") s += '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#005EB8"/><circle cx="16" cy="11" r="3.4" fill="#fff"/><path d="M10.5 24.5v-5a5.5 5.5 0 0 1 11 0v5z" fill="#fff"/></svg>';
-  else if (k === "W") s += '<svg viewBox="0 0 32 32"><path d="M16 2.2 31 28.5H1z" fill="#FFB100" stroke="#12100B" stroke-width="2.4" stroke-linejoin="round"/><rect x="14.4" y="11" width="3.2" height="9" rx="1.5" fill="#12100B"/><circle cx="16" cy="23.2" r="1.9" fill="#12100B"/></svg>';
-  else if (k === "S") s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#00843D"/><path d="M8 16.6l5.2 5.2L24.2 10.8" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  else if (k === "F") s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#C8102E"/><path d="M16 4.5c2.2 4.3.4 6.2-.9 8.2-1.6 2.5-3.5 4-3.5 7.3a4.4 4.4 0 0 0 8.8 0c0-1.6-.6-2.7-.6-2.7 2.6 1.4 3.6 3.9 3.6 6a7.4 7.4 0 0 1-14.8 0C8.6 14 16 12.6 16 4.5z" fill="#fff"/></svg>';
-  else s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#5A6572"/><path d="M9 9h14M9 14h14M9 19h9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  var icon = iconKey && SIGN_ICONS[iconKey];
+  if (k === "P") {
+    s += '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#fff" stroke="#C8102E" stroke-width="5"/>'
+       + (icon ? '<g color="#12100B">' + icon + '</g>' : "")
+       + '<rect x="13.2" y="1.6" width="5.6" height="28.8" fill="#C8102E" transform="rotate(45 16 16)"/></svg>';
+  } else if (k === "M") {
+    s += '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#005EB8"/>'
+       + (icon ? '<g color="#fff">' + icon + '</g>'
+               : '<circle cx="16" cy="11" r="3.4" fill="#fff"/><path d="M10.5 24.5v-5a5.5 5.5 0 0 1 11 0v5z" fill="#fff"/>')
+       + '</svg>';
+  } else if (k === "W") {
+    s += '<svg viewBox="0 0 32 32"><path d="M16 2.2 31 28.5H1z" fill="#FFB100" stroke="#12100B" stroke-width="2.4" stroke-linejoin="round"/>'
+       + (icon ? '<g color="#12100B">' + icon + '</g>'
+               : '<rect x="14.4" y="11" width="3.2" height="9" rx="1.5" fill="#12100B"/><circle cx="16" cy="23.2" r="1.9" fill="#12100B"/>')
+       + '</svg>';
+  } else if (k === "S") {
+    s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#00843D"/>'
+       + (icon ? '<g color="#fff">' + icon + '</g>'
+               : '<path d="M8 16.6l5.2 5.2L24.2 10.8" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>')
+       + '</svg>';
+  } else if (k === "F") {
+    s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#C8102E"/>'
+       + (icon ? '<g color="#fff">' + icon + '</g>'
+               : '<path d="M16 4.5c2.2 4.3.4 6.2-.9 8.2-1.6 2.5-3.5 4-3.5 7.3a4.4 4.4 0 0 0 8.8 0c0-1.6-.6-2.7-.6-2.7 2.6 1.4 3.6 3.9 3.6 6a7.4 7.4 0 0 1-14.8 0C8.6 14 16 12.6 16 4.5z" fill="#fff"/>')
+       + '</svg>';
+  } else {
+    s += '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="2.5" fill="#5A6572"/><path d="M9 9h14M9 14h14M9 19h9" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  }
   return s + "</span>";
 }
 
@@ -1535,7 +1596,7 @@ function signCard(s, idx) {
   var linked = 0, a = area();
   if (a) for (var i = 0; i < a.order.length; i++) if (a.order[i].signId === s.id) linked++;
   var h = '<article class="item" data-s="' + esc(s.st || "") + '" data-sign="' + s.id + '">'
-    + '<div class="item-top">' + isoBadge(s.cat)
+    + '<div class="item-top">' + isoBadge(s.cat, undefined, s.icon)
     +   '<div class="item-body">'
     +     '<div class="item-name">' + esc(s.name) + '</div>'
     +     '<div class="item-meta"><span class="tag ' + (s.statutory ? 't-stat">Statutory' : 't-rec">Advisory') + '</span>'
@@ -1957,7 +2018,7 @@ function guideCard(idx, t, a) {
   var already = false;
   if (a) for (var i = 0; i < a.signs.length; i++) if (a.signs[i].tpl === idx) already = true;
   return '<article class="item">'
-    + '<div class="item-top">' + isoBadge(t[2])
+    + '<div class="item-top">' + isoBadge(t[2], undefined, t[5])
     +   '<div class="item-body">'
     +     '<div class="item-name">' + esc(t[1]) + '</div>'
     +     '<div class="item-meta"><span class="tag ' + (t[3] ? 't-stat">Statutory' : 't-rec">Advisory') + '</span>'
@@ -2036,7 +2097,7 @@ function createArea(pi) {
 function makeSign(tplIdx) {
   var t = TPL[tplIdx];
   return { id: S.seq++, tpl: tplIdx, name: t[1], cat: t[2], statutory: t[3], legal: t[4],
-           st: "", qty: 1, note: "" };
+           icon: t[5] || null, st: "", qty: 1, note: "" };
 }
 
 function openAddSign() {
@@ -2059,7 +2120,7 @@ function openAddSign() {
       var t = TPL[i];
       if (f && (t[1] + " " + t[0] + " " + t[4]).toLowerCase().indexOf(f) < 0) continue;
       if (t[0] !== zone) { zone = t[0]; out += '<div class="listzone">' + esc(zone) + '</div>'; }
-      out += '<button class="listrow" data-addsign="' + i + '">' + isoBadge(t[2], 22)
+      out += '<button class="listrow" data-addsign="' + i + '">' + isoBadge(t[2], 22, t[5])
         + '<div><div class="lr-name">' + esc(t[1]) + '</div>'
         + '<div class="lr-sub">' + (t[3] ? "Statutory" : "Advisory") + ' · ' + esc(t[4]) + '</div></div></button>';
       n++;
