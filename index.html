@@ -848,11 +848,13 @@ function sheetXml(rows, colWidths, freezeRow) {
   return x;
 }
 
-/* style indices: 0 normal, 1 title, 2 section, 3 header, 4 area, 5 bold, 6 muted */
+/* style indices: 0 normal, 1 title, 2 section, 3 header, 4 area, 5 bold, 6 muted,
+   7 status OK, 8 status Missing, 9 status Damaged, 10 statutory tag, 11 advisory tag,
+   12 KPI figure (big bold) */
 var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
  + '<numFmts count="1"><numFmt numFmtId="164" formatCode="@"/></numFmts>'
- + '<fonts count="7">'
+ + '<fonts count="13">'
  +   '<font><sz val="11"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
@@ -860,20 +862,29 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<font><b/><sz val="12"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="11"/><name val="Calibri"/></font>'
  +   '<font><sz val="10"/><color rgb="FF6B6B6B"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="11"/><color rgb="FF00843D"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="11"/><color rgb="FFC8102E"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="11"/><color rgb="FFB87400"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="9"/><color rgb="FFB8040F"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="9"/><color rgb="FF8A5300"/><name val="Calibri"/></font>'
+ +   '<font><b/><sz val="20"/><color rgb="FF0D0D0D"/><name val="Calibri"/></font>'
  + '</fonts>'
- + '<fills count="6">'
+ + '<fills count="9">'
  +   '<fill><patternFill patternType="none"/></fill>'
  +   '<fill><patternFill patternType="gray125"/></fill>'
  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF0D0D0D"/><bgColor indexed="64"/></patternFill></fill>'
  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFE40613"/><bgColor indexed="64"/></patternFill></fill>'
  +   '<fill><patternFill patternType="solid"><fgColor rgb="FFEFEFEA"/><bgColor indexed="64"/></patternFill></fill>'
  +   '<fill><patternFill patternType="solid"><fgColor rgb="FF3C3C3C"/><bgColor indexed="64"/></patternFill></fill>'
+ +   '<fill><patternFill patternType="solid"><fgColor rgb="FFE6F2EB"/><bgColor indexed="64"/></patternFill></fill>'
+ +   '<fill><patternFill patternType="solid"><fgColor rgb="FFFDEBEC"/><bgColor indexed="64"/></patternFill></fill>'
+ +   '<fill><patternFill patternType="solid"><fgColor rgb="FFFDF1DE"/><bgColor indexed="64"/></patternFill></fill>'
  + '</fills>'
  + '<borders count="2"><border/>'
  +   '<border><bottom style="thin"><color rgb="FFBFBFBF"/></bottom></border>'
  + '</borders>'
  + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
- + '<cellXfs count="7">'
+ + '<cellXfs count="13">'
  +   '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
  +   '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  +   '<xf numFmtId="0" fontId="2" fillId="3" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
@@ -881,6 +892,12 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<xf numFmtId="0" fontId="4" fillId="5" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  +   '<xf numFmtId="164" fontId="5" fillId="0" borderId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
  +   '<xf numFmtId="164" fontId="6" fillId="0" borderId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
+ +   '<xf numFmtId="164" fontId="7" fillId="6" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="164" fontId="8" fillId="7" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="164" fontId="9" fillId="8" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="164" fontId="10" fillId="7" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="164" fontId="11" fillId="8" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="0" fontId="12" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  + '</cellXfs>'
  + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
  + '</styleSheet>';
@@ -2370,13 +2387,17 @@ function dl(blob, name) {
 }
 
 function exportXlsx() {
-  var W = 0, T = 1, SEC = 2, HD = 3, AREA = 4, B = 5, MUT = 6;
+  var W = 0, T = 1, SEC = 2, HD = 3, AREA = 4, B = 5, MUT = 6,
+      ST_OK = 7, ST_MISS = 8, ST_DAM = 9, TAG_STAT = 10, TAG_ADV = 11, KPI = 12;
+  function statusStyle(st) {
+    return st === "OK" ? ST_OK : st === "Missing" ? ST_MISS : st === "Damaged" ? ST_DAM : 0;
+  }
   var rows = [], i, j, k;
   rows.push([{ v: "SPECTRUM INDUSTRIAL — SIGNAGE SURVEY", s: T }]);
   rows.push([{ v: "Site", s: B }, S.site || "—", { v: "Surveyor", s: B }, S.by || "—",
              { v: "Date", s: B }, S.date || "—"]);
   var t = surveyStats();
-  rows.push([{ v: "Statutory compliance", s: B }, (t.pct === null ? "—" : t.pct + "%"),
+  rows.push([{ v: "Statutory compliance", s: B }, { v: (t.pct === null ? "—" : t.pct + "%"), s: KPI },
              { v: "Areas", s: B }, t.areas, { v: "Products", s: B }, t.lines]);
   rows.push([]);
 
@@ -2396,13 +2417,15 @@ function exportXlsx() {
         if (a.order[k].signId === s.id) prods.push(a.order[k]);
       }
       if (!prods.length) {
-        rows.push([s.name, s.st || "Not checked", s.statutory ? "Statutory" : "Advisory",
+        rows.push([s.name, { v: s.st || "Not checked", s: statusStyle(s.st) },
+                   { v: s.statutory ? "Statutory" : "Advisory", s: s.statutory ? TAG_STAT : TAG_ADV },
                    "", "", notes.join(" / ")]);
       } else {
         for (k = 0; k < prods.length; k++) {
           var p = prods[k];
-          rows.push([k === 0 ? s.name : "", k === 0 ? (s.st || "Not checked") : "",
-                     k === 0 ? (s.statutory ? "Statutory" : "Advisory") : "",
+          rows.push([k === 0 ? s.name : "",
+                     k === 0 ? { v: s.st || "Not checked", s: statusStyle(s.st) } : "",
+                     k === 0 ? { v: s.statutory ? "Statutory" : "Advisory", s: s.statutory ? TAG_STAT : TAG_ADV } : "",
                      (p.pn || "CUSTOM") + " — " + p.name, p.qty,
                      [k === 0 ? notes.join(" / ") : "", p.note].filter(Boolean).join(" / ")]);
         }
@@ -2512,7 +2535,12 @@ function buildPdf() {
     var need = maxL * 10 + 7;
     if (pageBreak(need) && opts.repeat) { opts.repeat(); }
     var x = d.mL;
+    var chipCol = opts.chipCol == null ? 1 : opts.chipCol;
     for (i = 0; i < cells.length; i++) {
+      if (opts.chipFill && i === chipCol && lines[i].length && lines[i][0]) {
+        var chipW = Math.min(textWidth(lines[i][0], 8.2, true) + 13, cols[i] - pad + 5);
+        d.rect(x - 3, d.y - 2.6, chipW, 10.4, opts.chipFill);
+      }
       var yy = d.y, col = opts.colors && opts.colors[i] ? opts.colors[i] : "1A1A1A";
       for (var l = 0; l < lines[i].length; l++) {
         d.text(lines[i][l], x, yy, 8.2, (i === 0 && opts.boldFirst) || (opts.bold && opts.bold[i]), col);
@@ -2527,6 +2555,10 @@ function buildPdf() {
   function statusColour(st) {
     return st === "OK" ? "00843D" : st === "Missing" ? "C8102E"
          : st === "Damaged" ? "B87400" : "9A9A9A";
+  }
+  function statusChip(st) {
+    return st === "OK" ? "E6F2EB" : st === "Missing" ? "FDEBEC"
+         : st === "Damaged" ? "FDF1DE" : null;
   }
 
   header();
@@ -2581,6 +2613,7 @@ function buildPdf() {
       tableRow(gc, [gaps[gk][0], gaps[gk][1].name, gaps[gk][1].st, gaps[gk][1].legal || "—"],
         { boldFirst: false, bold: [false, true, true, false],
           colors: ["1A1A1A", "1A1A1A", statusColour(gaps[gk][1].st), "7A7A7A"],
+          chipFill: statusChip(gaps[gk][1].st), chipCol: 2,
           repeat: function () { tableHead(gc, ["Area", "Sign", "Status", "Legal basis"]); } });
     }
     d.y -= 8;
@@ -2612,7 +2645,7 @@ function buildPdf() {
       if (!ps.length) {
         tableRow(ac, [sg.name, sg.st || "Not checked", "", "", sg.note || ""],
           { boldFirst: true, colors: ["1A1A1A", statusColour(sg.st), "1A1A1A", "1A1A1A", "6B6B6B"],
-            bold: [true, true, false, false, false], repeat: rep });
+            bold: [true, true, false, false, false], chipFill: statusChip(sg.st), chipCol: 1, repeat: rep });
       } else {
         for (var pk = 0; pk < ps.length; pk++) {
           tableRow(ac,
@@ -2620,7 +2653,8 @@ function buildPdf() {
              (ps[pk].pn || "CUSTOM") + "  " + ps[pk].name, String(ps[pk].qty),
              [pk === 0 ? sg.note : "", ps[pk].note].filter(Boolean).join(" / ")],
             { boldFirst: true, colors: ["1A1A1A", statusColour(sg.st), "1A1A1A", "1A1A1A", "6B6B6B"],
-              bold: [true, true, false, true, false], repeat: rep });
+              bold: [true, true, false, true, false],
+              chipFill: pk === 0 ? statusChip(sg.st) : null, chipCol: 1, repeat: rep });
         }
       }
     }
