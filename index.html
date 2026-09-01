@@ -180,12 +180,15 @@ body{overflow:hidden}
 .qtybox label{font-size:11.5px;color:var(--ink-45);font-weight:600}
 .qtybox input{
   width:52px;padding:6px 8px;border:1.5px solid var(--rule);border-radius:7px;
-  text-align:center;font-weight:650;font-size:14px
+  text-align:center;font-weight:650;font-size:16px
 }
 .qtybox input:focus{outline:none;border-color:var(--ink)}
+/* Every focusable text field is 16px on purpose: iOS Safari auto-zooms the
+   page when you focus an input smaller than that, and never zooms back out.
+   Don't shrink these below 16px. */
 .note-in{
   width:100%;margin-top:9px;padding:9px 11px;border:1.5px solid var(--rule);
-  border-radius:9px;font-size:13.5px;resize:vertical;min-height:38px;background:#FCFCFA
+  border-radius:9px;font-size:16px;resize:vertical;min-height:38px;background:#FCFCFA
 }
 .note-in:focus{outline:none;border-color:var(--ink);background:#fff}
 
@@ -267,7 +270,7 @@ body{overflow:hidden}
 @supports (aspect-ratio:4/3){.photocard img{height:auto;aspect-ratio:4/3}}
 .photocard .pc-body{padding:9px 10px 10px}
 .photocard input{
-  width:100%;border:none;border-bottom:1.5px solid var(--rule);padding:5px 0;font-size:13px;background:none
+  width:100%;border:none;border-bottom:1.5px solid var(--rule);padding:5px 0;font-size:16px;background:none
 }
 .photocard input:focus{outline:none;border-bottom-color:var(--ink)}
 .photocard .note-add.small{margin-top:8px}
