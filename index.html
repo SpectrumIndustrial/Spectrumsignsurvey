@@ -270,6 +270,12 @@ body{overflow:hidden}
   width:100%;border:none;border-bottom:1.5px solid var(--rule);padding:5px 0;font-size:13px;background:none
 }
 .photocard input:focus{outline:none;border-bottom-color:var(--ink)}
+.photocard .note-add.small{margin-top:8px}
+.pc-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-45)}
+.pc-part-name{font-weight:640;color:var(--ink)}
+.pc-part-x{color:var(--ink-45);width:20px;height:20px;display:grid;place-items:center;border-radius:6px;flex:none;margin-left:auto}
+.pc-part-x:hover{color:var(--red);background:var(--red-tint)}
+.pc-part-x svg{width:11px;height:11px;stroke-width:2.4}
 .photocard .pc-act{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
 .shoot{
   width:100%;padding:16px;border:2px dashed var(--rule);border-radius:13px;background:#fff;
@@ -1602,8 +1608,11 @@ function renderArea(a) {
   } else {
     h += '<div class="photostrip">';
     for (var k = 0; k < a.photos.length; k++) {
+      var stripBits = [];
+      if (a.photos[k].note) stripBits.push(a.photos[k].note);
+      if (a.photos[k].part) stripBits.push(partLabel(a.photos[k].part));
       h += '<figure class="thumb"><img src="' + a.photos[k].src + '" alt="">'
-         + (a.photos[k].note ? '<figcaption>' + esc(a.photos[k].note) + '</figcaption>' : "")
+         + (stripBits.length ? '<figcaption>' + esc(stripBits.join(" — ")) + '</figcaption>' : "")
          + '</figure>';
     }
     h += '</div>';
@@ -1695,7 +1704,21 @@ function oline(a, j) {
 }
 
 /* ================= PARTS ================= */
-var Q = "", fMat = "", fSize = "", LIMIT = 24, shown = LIMIT, pendingSign = null;
+var Q = "", fMat = "", fSize = "", LIMIT = 24, shown = LIMIT, pendingSign = null, pendingPhoto = null;
+
+function photoById(a, id) {
+  if (!a) return null;
+  for (var i = 0; i < a.photos.length; i++) if (a.photos[i].id === id) return a.photos[i];
+  return null;
+}
+/* Compact "PN — Name (Material, Size)" label for a part attached to a photo,
+   shared by the photo card, the area preview strip, and both exports so the
+   wording never drifts between them. */
+function partLabel(part) {
+  if (!part) return "";
+  var meta = [part.mat, part.size].filter(Boolean).join(", ");
+  return (part.pn ? part.pn + " — " : "") + part.name + (meta ? " (" + meta + ")" : "");
+}
 
 function isSku(q) { return /[0-9]/.test(q) && /^[A-Za-z0-9\-_/. ]+$/.test(q); }
 
@@ -1796,6 +1819,9 @@ function renderRefNote() {
   var el = $("#refNote"); if (!el) return;
   var a = area(), name = "";
   if (a && pendingSign) for (var i = 0; i < a.signs.length; i++) if (a.signs[i].id === pendingSign) name = a.signs[i].name;
+  if (a && pendingPhoto) {
+    for (var k = 0; k < a.photos.length; k++) if (a.photos[k].id === pendingPhoto) name = "Photo " + (k + 1);
+  }
   el.innerHTML = name
     ? '<div class="refbar">' + ic("link", 14) + 'For: <b>' + esc(name) + '</b>'
       + '<button id="clearRef">Cancel</button></div>' : "";
@@ -1843,6 +1869,15 @@ function renderOrderList() {
 function addPart(idx) {
   var a = area(); if (!a || !ensureCatalogue()) return;
   var p = PRD[idx];
+  if (pendingPhoto) {
+    var ph = photoById(a, pendingPhoto);
+    pendingPhoto = null;
+    if (!ph) return;
+    ph.part = { pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false };
+    save(); toast("Part attached to photo");
+    go("photos");
+    return;
+  }
   a.order.push({ id: S.seq++, pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p),
                  qty: 1, signId: pendingSign, custom: false, note: "" });
   if (pendingSign) { pendingSign = null; toast("Added and linked"); }
@@ -1878,7 +1913,7 @@ $("#fileIn").addEventListener("change", function (e) {
         toast("Couldn't process that photo — try again", true);
         return;
       }
-      a.photos.push({ id: S.seq++, src: url, note: "" });
+      a.photos.push({ id: S.seq++, src: url, note: "", part: null });
       save(); render(); toast("Photo added to " + a.name);
     };
     img.onerror = function () { toast("Couldn't read that image", true); };
@@ -1905,6 +1940,13 @@ function renderPhotos() {
       h += '<figure class="photocard"><img src="' + p.src + '" alt="Photo ' + (i + 1) + '">'
          + '<div class="pc-body"><input value="' + esc(p.note) + '" data-pnote="' + p.id
          + '" placeholder="What is it?">'
+         + (p.part
+             ? '<div class="pc-part"><span class="pn">' + esc(p.part.pn || "Custom") + '</span>'
+               + '<span class="pc-part-name">' + esc(p.part.name) + '</span>'
+               + (p.part.mat ? '<span class="dot"></span><span>' + esc(p.part.mat) + '</span>' : "")
+               + (p.part.size ? '<span class="dot"></span><span>' + esc(p.part.size) + '</span>' : "")
+               + '<button class="pc-part-x" data-partdel="' + p.id + '" aria-label="Remove part">' + ic("x", 11) + '</button></div>'
+             : '<button class="note-add small" data-findpart="' + p.id + '">' + ic("link", 12) + 'Add part</button>')
          + '<div class="pc-act"><span class="eyebrow">Photo ' + (i + 1) + '</span>'
          + '<button class="del" data-pdel="' + p.id + '" aria-label="Delete photo">' + ic("bin", 16) + '</button>'
          + '</div></div></figure>';
@@ -2206,7 +2248,8 @@ function openCustomProduct() {
     + '<input id="c-size" placeholder="e.g. 500 x 500mm" autocomplete="off"></div>'
     + '<div class="field"><label class="eyebrow" for="c-mat">Material (optional)</label>'
     + '<input id="c-mat" placeholder="e.g. Dibond" autocomplete="off"></div>'
-    + '<button class="btn btn-primary btn-block" id="saveCustom">Add to ' + esc(area() ? area().name : "area") + '</button>');
+    + '<button class="btn btn-primary btn-block" id="saveCustom">'
+    + (pendingPhoto ? 'Attach to photo' : 'Add to ' + esc(area() ? area().name : "area")) + '</button>');
   setTimeout(function () { var e = $("#c-name"); if (e) e.focus(); }, 120);
   document.querySelectorAll("#c-name,#c-size,#c-mat").forEach(function (inp) {
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); $("#saveCustom").click(); } });
@@ -2215,6 +2258,17 @@ function openCustomProduct() {
     var n = $("#c-name").value.trim(), a = area();
     if (!n) { $("#c-name").focus(); toast("Give it a short description", true); return; }
     if (!a) return;
+    if (pendingPhoto) {
+      var ph = photoById(a, pendingPhoto);
+      pendingPhoto = null;
+      if (ph) {
+        ph.part = { pn: "", name: n, mat: $("#c-mat").value.trim(), size: $("#c-size").value.trim(), custom: true };
+        save();
+      }
+      closeSheet(); go("photos");
+      toast("Custom part attached");
+      return;
+    }
     a.order.push({ id: S.seq++, pn: "", name: n, mat: $("#c-mat").value.trim(),
                    size: $("#c-size").value.trim(), qty: 1, signId: pendingSign, custom: true, note: "" });
     pendingSign = null; save(); closeSheet();
@@ -2459,7 +2513,12 @@ function exportXlsx() {
     }
     if (a.photos.length) {
       var caps = [];
-      for (k = 0; k < a.photos.length; k++) caps.push((k + 1) + ". " + (a.photos[k].note || "no description"));
+      for (k = 0; k < a.photos.length; k++) {
+        var capPh = a.photos[k];
+        var capTxt = (k + 1) + ". " + (capPh.note || "no description");
+        if (capPh.part) capTxt += "  [Part: " + partLabel(capPh.part) + "]";
+        caps.push(capTxt);
+      }
       rows.push([{ v: "Photos (" + a.photos.length + ")", s: B }, { v: caps.join("  |  "), s: MUT }]);
     }
     rows.push([]);
@@ -2695,8 +2754,8 @@ function buildPdf() {
       d.y -= 12;
       var px = d.mL, pw = (CW - 20) / 3, ph = pw * 0.72;
       for (var phi = 0; phi < a.photos.length; phi++) {
-        if (px + pw > d.mR + 1) { px = d.mL; d.y -= ph + 24; }
-        if (pageBreak(ph + 30)) { px = d.mL; }
+        if (px + pw > d.mR + 1) { px = d.mL; d.y -= ph + 34; }
+        if (pageBreak(ph + 40)) { px = d.mL; }
         var ok = false;
         try {
           if (isJpegDataUrl(a.photos[phi].src)) {
@@ -2711,13 +2770,20 @@ function buildPdf() {
           d.rect(px, d.y - ph, pw, ph, "F0F0EC");
           d.text("Photo " + (phi + 1) + " — see app", px + 8, d.y - ph / 2, 7.5, false, "8A8A8A");
         }
+        var capY = d.y - ph - 9;
+        var thisPart = a.photos[phi].part;
+        if (thisPart) {
+          var partLine = wrapText(partLabel(thisPart), 6.8, true, pw)[0] || "";
+          d.text(partLine, px, capY, 6.8, true, "1A1A1A");
+          capY -= 9;
+        }
         var cap = wrapText((phi + 1) + ". " + (a.photos[phi].note || "No description"), 6.8, false, pw);
         for (var ci = 0; ci < Math.min(2, cap.length); ci++) {
-          d.text(cap[ci], px, d.y - ph - 9 - ci * 8, 6.8, false, "6B6B6B");
+          d.text(cap[ci], px, capY - ci * 8, 6.8, false, "6B6B6B");
         }
         px += pw + 10;
       }
-      d.y -= ph + 30;
+      d.y -= ph + 40;
     }
     d.y -= 10;
   }
@@ -2927,6 +2993,27 @@ document.addEventListener("click", function (e) {
     } } });
     return;
   }
+  if ((b = t.closest("[data-findpart]"))) {
+    pendingPhoto = +b.dataset.findpart;
+    pendingSign = null; Q = ""; fMat = ""; fSize = ""; shown = LIMIT;
+    go("parts");
+    setTimeout(function () { var q = $("#q"); if (q) q.focus(); }, 180);
+    return;
+  }
+  if ((b = t.closest("[data-partdel]"))) {
+    if (!a) return;
+    var ppid = +b.dataset.partdel, ppAreaId = a.id;
+    var pph = photoById(a, ppid);
+    if (!pph) return;
+    var removedPart = pph.part;
+    pph.part = null; save(); render();
+    toast("Part removed", { action: { label: "Undo", fn: function () {
+      var ar = areaById(ppAreaId); if (!ar) return;
+      var tph = photoById(ar, ppid);
+      if (tph) { tph.part = removedPart; save(); render(); }
+    } } });
+    return;
+  }
   if ((b = t.closest("[data-editnote]"))) { openNote(b.dataset.editnote); return; }
   if ((b = t.closest("[data-filter]"))) { openPicker(b.dataset.filter); return; }
   if (t.closest("#clrF")) { fMat = ""; fSize = ""; shown = LIMIT; renderFilters(); renderResults(); return; }
@@ -2935,7 +3022,7 @@ document.addEventListener("click", function (e) {
     var qi = $("#q"); if (qi) { qi.value = ""; qi.focus(); }
     renderResults(); return;
   }
-  if (t.closest("#clearRef")) { pendingSign = null; renderRefNote(); return; }
+  if (t.closest("#clearRef")) { pendingSign = null; pendingPhoto = null; renderRefNote(); return; }
   if (t.closest("#more")) { shown += LIMIT; renderResults(); return; }
   if (t.closest("#gClr")) {
     GQ = ""; var gqi = $("#gq"); if (gqi) { gqi.value = ""; gqi.focus(); }
