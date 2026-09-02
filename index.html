@@ -1905,14 +1905,15 @@ $("#fileIn").addEventListener("change", function (e) {
   rd.onload = function (ev) {
     var img = new Image();
     img.onload = function () {
-      /* Sizing for the report: a photo prints ~165pt wide, so the reader sees
-         roughly 690px — but feeding the downscaler more pixels than that still
-         comes out visibly cleaner, and it leaves something in hand when someone
-         zooms into the PDF to inspect a sign. Measured against the original at
-         print size, 1400px/0.78 lands ~2.8dB better than the old 1100px/0.7 for
-         ~70KB a photo, and beats spending the same bytes on the quality slider
-         alone. Raise either number and the file grows faster than it improves. */
-      var max = 1400, w = img.width, h = img.height;
+      /* Sizing for the report, which is emailed to customers so the file has to
+         stay sendable. A photo prints ~165pt (2.3in) wide, so 300dpi print needs
+         ~690px; 900px covers that at ~390dpi with headroom to zoom in. Compared
+         side by side on a real grainy photo, 900px and 1400px are indistinguish-
+         able at print size and 900px is barely softer even at 3x zoom — but it
+         halves the file (113KB vs 247KB a photo, so a 20-photo survey is 2.2MB
+         rather than 4.9MB). Below ~800px the small print on a sign starts to go.
+         Photos are ~98% of the PDF, so this number alone sets the file size. */
+      var max = 900, w = img.width, h = img.height;
       if (w > max || h > max) { var r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r); }
       var cv = document.createElement("canvas");
       cv.width = w; cv.height = h;
@@ -1923,7 +1924,7 @@ $("#fileIn").addEventListener("change", function (e) {
       if ("imageSmoothingQuality" in cx) cx.imageSmoothingQuality = "high";
       cx.drawImage(img, 0, 0, w, h);
       var url = "";
-      try { url = cv.toDataURL("image/jpeg", 0.78); } catch (err) { url = ""; }
+      try { url = cv.toDataURL("image/jpeg", 0.80); } catch (err) { url = ""; }
       if (url.indexOf("data:image/jpeg") !== 0) {
         toast("Couldn't process that photo — try again", true);
         return;
