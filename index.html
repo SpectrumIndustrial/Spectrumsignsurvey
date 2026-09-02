@@ -2552,6 +2552,7 @@ function exportXlsx() {
   o.push([{ v: "Area", s: HD }, { v: "Part No / SKU", s: HD }, { v: "Description", s: HD },
           { v: "Material", s: HD }, { v: "Size", s: HD }, { v: "Qty", s: HD },
           { v: "Against sign", s: HD }, { v: "Notes", s: HD }]);
+  var orderRows = 0;
   for (i = 0; i < S.areas.length; i++) {
     var ar = S.areas[i];
     for (j = 0; j < ar.order.length; j++) {
@@ -2559,9 +2560,21 @@ function exportXlsx() {
       if (od.signId) for (k = 0; k < ar.signs.length; k++) if (ar.signs[k].id === od.signId) against = ar.signs[k].name;
       o.push([ar.name, od.pn || "CUSTOM", od.name, od.mat || "", od.size || "", od.qty,
               against, od.note || ""]);
+      orderRows++;
+    }
+    /* Parts attached to a photo belong here too so the office can quote from
+       one list. Same columns as an order line: qty is 1 (one part identified on
+       one photo), and it points back at the photo the way a product points at
+       its sign. */
+    for (var pi = 0; pi < ar.photos.length; pi++) {
+      var pp = ar.photos[pi].part;
+      if (!pp) continue;
+      o.push([ar.name, pp.pn || "CUSTOM", pp.name, pp.mat || "", pp.size || "", 1,
+              "Photo " + (pi + 1), ar.photos[pi].note || ""]);
+      orderRows++;
     }
   }
-  if (!t.lines) o.push([{ v: "No products specified.", s: MUT }]);
+  if (!orderRows) o.push([{ v: "No products specified.", s: MUT }]);
 
   var bytes = buildXlsx([
     { name: "Survey", rows: rows, widths: [42, 13, 13, 40, 6, 34] },
