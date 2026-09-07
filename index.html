@@ -676,6 +676,76 @@ html.dark .toast .toast-act{color:#9FE0FF}
 .legendcard p{font-size:11.5px;line-height:1.4;color:var(--ink-45)}
 @media (min-width:560px){.legendgrid{grid-template-columns:repeat(3,1fr)}}
 
+/* ---- saved-survey rows ---- */
+.surveyrow{
+  display:flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:12px;
+  background:var(--card);margin-bottom:8px;padding-right:6px;transition:border-color .14s
+}
+.surveyrow:hover{border-color:#C9C9C2}
+.surveyrow.cur{border-color:var(--ink);box-shadow:var(--shadow)}
+.surveyrow-main{flex:1;min-width:0;text-align:left;padding:12px 4px 12px 13px}
+.surveyrow-name{font-size:14.5px;font-weight:670;letter-spacing:-.008em;display:flex;
+  align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3}
+.surveyrow-meta{font-size:12px;color:var(--ink-45);margin-top:3px;line-height:1.35}
+.surveyrow-when{font-size:11px;color:var(--ink-45);margin-top:3px;opacity:.85}
+html.dark .surveyrow:hover{border-color:#48484A}
+html.dark .surveyrow.cur{border-color:var(--ink-45)}
+
+/* ---- geo / lookup rows in the site sheet ---- */
+.inlinefield{display:flex;gap:8px;align-items:stretch}
+.inlinefield input{flex:1;min-width:0}
+.inlinefield .btn{flex:none;padding:0 15px;font-size:13.5px;white-space:nowrap}
+.metaline{
+  display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink-45);
+  line-height:1.4;margin:-6px 0 14px
+}
+.metaline svg{flex:none;margin-top:1px;width:13px;height:13px;stroke-width:2.2;color:var(--green)}
+.metaline button{margin-left:auto;flex:none;font-size:12px;font-weight:650;color:var(--ink-45);
+  text-decoration:underline;white-space:nowrap}
+.metaline.busy svg{color:var(--ink-45)}
+
+/* ---- guide sub-navigation ---- */
+.segmented{
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:3px;
+  background:var(--rule-2);border-radius:11px;margin:14px 0 4px
+}
+.segmented button{
+  padding:9px 6px;border-radius:8px;font-size:13px;font-weight:640;color:var(--ink-45);
+  transition:background .14s,color .14s
+}
+.segmented button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---- guide reference blocks ---- */
+.refblock{
+  background:var(--card);border:1px solid var(--rule);border-radius:13px;
+  padding:15px 15px 13px;margin-bottom:10px;box-shadow:var(--shadow)
+}
+.refblock h3{font-size:14.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+.refblock p{font-size:13px;line-height:1.55;color:var(--ink-70);margin-bottom:8px}
+.refblock p:last-child{margin-bottom:0}
+.refblock ul{margin:0 0 4px;padding-left:17px}
+.refblock li{font-size:13px;line-height:1.55;color:var(--ink-70);margin-bottom:5px}
+.refblock li b{color:var(--ink);font-weight:660}
+.reftable{width:100%;border-collapse:collapse;margin:2px 0 6px;font-size:12.5px}
+.reftable th{
+  text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-45);padding:0 10px 6px 0;border-bottom:1px solid var(--rule);white-space:nowrap
+}
+.reftable td{padding:7px 10px 7px 0;border-bottom:1px solid var(--rule-2);
+  color:var(--ink-70);vertical-align:top;line-height:1.4}
+.reftable tr:last-child td{border-bottom:none}
+.reftable td:first-child{font-weight:650;color:var(--ink);white-space:nowrap}
+.reftable-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.matrow{padding:11px 0;border-top:1px solid var(--rule-2)}
+.matrow:first-of-type{border-top:none;padding-top:4px}
+.matrow-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.matrow-head b{font-size:13.5px;font-weight:670;letter-spacing:-.008em}
+.matrow p{font-size:12.5px;line-height:1.5;color:var(--ink-45);margin:0}
+.refnote{
+  font-size:12px;line-height:1.5;color:var(--ink-45);background:var(--rule-2);
+  border-radius:9px;padding:10px 12px;margin-top:4px
+}
+
 /* ---- scrollable lists: thin, unobtrusive scrollbar on desktop ---- */
 .sheet-list{scrollbar-width:thin}
 .sheet-list::-webkit-scrollbar{width:8px}
@@ -693,6 +763,9 @@ html.dark .toast .toast-act{color:#9FE0FF}
       <span class="ctx" id="ctxLabel">Signage survey</span>
     </div>
     <div class="spacer"></div>
+    <button class="iconbtn" id="btnSurveys" aria-label="Saved surveys">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    </button>
     <button class="iconbtn" id="btnTheme" aria-label="Switch to dark mode"></button>
     <button class="iconbtn" id="btnSetup" aria-label="Site details">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -822,10 +895,21 @@ function colName(n) {                      // 1 -> A
 }
 
 /* rows: array of arrays. A cell is a string/number, or
-   {v:value, s:styleIndex} for styled cells. */
-function sheetXml(rows, colWidths, freezeRow) {
+   {v:value, s:styleIndex} for styled cells.
+   opts: {freeze:<rows to lock at the top>, filter:"A5:I80", merges:["A1:I1"]}
+   Element order below follows the CT_Worksheet sequence — sheetViews, cols,
+   sheetData, autoFilter, mergeCells — Excel rejects the file otherwise. */
+function sheetXml(rows, colWidths, opts) {
+  opts = opts || {};
   var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+  if (opts.freeze) {
+    var tl = "A" + (opts.freeze + 1);
+    x += '<sheetViews><sheetView workbookViewId="0">'
+       + '<pane ySplit="' + opts.freeze + '" topLeftCell="' + tl + '" activePane="bottomLeft" state="frozen"/>'
+       + '<selection pane="bottomLeft" activeCell="' + tl + '" sqref="' + tl + '"/>'
+       + '</sheetView></sheetViews>';
+  }
   if (colWidths && colWidths.length) {
     x += "<cols>";
     for (var c = 0; c < colWidths.length; c++) {
@@ -834,9 +918,10 @@ function sheetXml(rows, colWidths, freezeRow) {
     x += "</cols>";
   }
   x += "<sheetData>";
+  var heights = opts.heights || {};
   for (var r = 0; r < rows.length; r++) {
-    var row = rows[r] || [];
-    x += '<row r="' + (r + 1) + '">';
+    var row = rows[r] || [], ht = heights[r + 1];
+    x += '<row r="' + (r + 1) + '"' + (ht ? ' ht="' + ht + '" customHeight="1"' : "") + '>';
     for (var i = 0; i < row.length; i++) {
       var cell = row[i];
       if (cell === null || cell === undefined || cell === "") continue;
@@ -854,13 +939,22 @@ function sheetXml(rows, colWidths, freezeRow) {
     }
     x += "</row>";
   }
-  x += "</sheetData></worksheet>";
+  x += "</sheetData>";
+  if (opts.filter) x += '<autoFilter ref="' + opts.filter + '"/>';
+  if (opts.merges && opts.merges.length) {
+    x += '<mergeCells count="' + opts.merges.length + '">';
+    for (var mi = 0; mi < opts.merges.length; mi++) x += '<mergeCell ref="' + opts.merges[mi] + '"/>';
+    x += "</mergeCells>";
+  }
+  x += "</worksheet>";
   return x;
 }
 
 /* style indices: 0 normal, 1 title, 2 section, 3 header, 4 area, 5 bold, 6 muted,
    7 status OK, 8 status Missing, 9 status Damaged, 10 statutory tag, 11 advisory tag,
-   12 KPI figure (big bold) */
+   12 KPI figure (big bold), 13 number, 14 number bold.
+   13/14 deliberately use General rather than the "@" text format the other
+   styles carry — a quantity has to stay a number Excel will total. */
 var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
  + '<numFmts count="1"><numFmt numFmtId="164" formatCode="@"/></numFmts>'
@@ -894,7 +988,7 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<border><bottom style="thin"><color rgb="FFBFBFBF"/></bottom></border>'
  + '</borders>'
  + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
- + '<cellXfs count="13">'
+ + '<cellXfs count="15">'
  +   '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
  +   '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  +   '<xf numFmtId="0" fontId="2" fillId="3" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
@@ -908,6 +1002,8 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<xf numFmtId="164" fontId="10" fillId="7" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
  +   '<xf numFmtId="164" fontId="11" fillId="8" borderId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
  +   '<xf numFmtId="0" fontId="12" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>'
+ +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>'
+ +   '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
  + '</cellXfs>'
  + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
  + '</styleSheet>';
@@ -958,7 +1054,7 @@ function buildXlsx(sheets) {
   files.push({ name: "xl/styles.xml", data: utf8(STYLES_XML) });
   for (i = 0; i < sheets.length; i++) {
     files.push({ name: "xl/worksheets/sheet" + (i + 1) + ".xml",
-                 data: utf8(sheetXml(sheets[i].rows, sheets[i].widths)) });
+                 data: utf8(sheetXml(sheets[i].rows, sheets[i].widths, sheets[i].opts)) });
   }
   return zipStore(files);
 }
@@ -1337,25 +1433,177 @@ function isoBadge(k, size, iconKey) {
   return s + "</span>";
 }
 
-/* ---------- state ---------- */
-var KEY = "spectrum.survey.v2";
+/* ================= state & storage =================
+   Surveys live in IndexedDB, one record each, so a survey survives closing
+   the tab and isn't capped at the ~5MB a photo-heavy survey blows through in
+   sessionStorage. Two stores: "surveys" holds the full record (photos and
+   all), "meta" holds a small summary row so the survey list can be drawn
+   without reading megabytes of image data back off disk.
+
+   Everything is per-device and per-browser: nothing is uploaded, and another
+   surveyor's phone has its own database that this one can't see.
+
+   sessionStorage stays as the fallback for browsers where IndexedDB is
+   unavailable (private windows, locked-down settings) — same behaviour as
+   before, including the "this device only" note. */
+var KEY = "spectrum.survey.v2";           /* legacy single-survey key; still read once, to migrate */
+var DB_NAME = "spectrum.surveys", DB_VER = 1, ST_FULL = "surveys", ST_META = "meta";
+var CUR_KEY = "spectrum.currentSurvey";
 var STORE = (function () {
   try { window.sessionStorage.setItem("__t", "1"); window.sessionStorage.removeItem("__t");
         return window.sessionStorage; } catch (e) { return null; }
 })();
+function newId() { return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function blank() {
-  return { site:"", by:"", date:"", seen:false, note:"", areas:[], active:null, seq:1 };
+  return { id:newId(), created:Date.now(), updated:0,
+           site:"", by:"", date:"", postcode:"", addr:"", geo:null,
+           seen:false, note:"", areas:[], active:null, seq:1 };
 }
 var S = blank(), exported = false, memOnly = false;
 
-var lastSavedAt = null;
+/* ---- IndexedDB ---- */
+var DB = null, dbFailed = false, dbReady = false;
+function openDb(cb) {
+  if (DB) return cb(DB);
+  if (dbFailed || !window.indexedDB) return cb(null);
+  var rq;
+  try { rq = window.indexedDB.open(DB_NAME, DB_VER); }
+  catch (e) { dbFailed = true; return cb(null); }
+  rq.onupgradeneeded = function () {
+    var db = rq.result;
+    if (!db.objectStoreNames.contains(ST_FULL)) db.createObjectStore(ST_FULL, { keyPath: "id" });
+    if (!db.objectStoreNames.contains(ST_META)) db.createObjectStore(ST_META, { keyPath: "id" });
+  };
+  rq.onsuccess = function () { DB = rq.result; dbReady = true; cb(DB); };
+  rq.onerror = rq.onblocked = function () { dbFailed = true; cb(null); };
+}
+function setCurrentId(id) { try { window.localStorage.setItem(CUR_KEY, id); } catch (e) {} }
+function getCurrentId() { try { return window.localStorage.getItem(CUR_KEY); } catch (e) { return null; } }
+
+/* A summary row for the survey list — small enough to read back instantly. */
+function metaOf() {
+  var t = surveyStats();
+  return { id:S.id, created:S.created, updated:S.updated || Date.now(),
+           site:S.site, by:S.by, date:S.date, addr:S.addr,
+           areas:t.areas, signs:t.signs, checked:t.done, products:t.lines,
+           photos:t.photos, open:t.missing + t.damaged, pct:t.pct };
+}
+function listSurveys(cb) {
+  openDb(function (db) {
+    if (!db) return cb([]);
+    var out = [], tx;
+    try { tx = db.transaction(ST_META, "readonly"); } catch (e) { return cb([]); }
+    tx.objectStore(ST_META).openCursor().onsuccess = function (e) {
+      var c = e.target.result;
+      if (c) { out.push(c.value); c.continue(); }
+    };
+    tx.oncomplete = function () {
+      out.sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); });
+      cb(out);
+    };
+    tx.onerror = tx.onabort = function () { cb([]); };
+  });
+}
+function readSurvey(id, cb) {
+  openDb(function (db) {
+    if (!db) return cb(null);
+    var tx, rq;
+    try { tx = db.transaction(ST_FULL, "readonly"); rq = tx.objectStore(ST_FULL).get(id); }
+    catch (e) { return cb(null); }
+    rq.onsuccess = function () { cb(rq.result || null); };
+    tx.onerror = tx.onabort = function () { cb(null); };
+  });
+}
+function deleteSurvey(id, cb) {
+  openDb(function (db) {
+    if (!db) return cb && cb();
+    var tx;
+    try { tx = db.transaction([ST_FULL, ST_META], "readwrite"); }
+    catch (e) { return cb && cb(); }
+    tx.objectStore(ST_FULL).delete(id);
+    tx.objectStore(ST_META).delete(id);
+    tx.oncomplete = tx.onerror = tx.onabort = function () { cb && cb(); };
+  });
+}
+/* Replace the live survey with a stored record, defaulting any field a record
+   written by an older version of the app doesn't carry yet. */
+function adopt(rec) {
+  var base = blank();
+  for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) base[k] = rec[k];
+  S = base;
+}
+
+/* ---- writing ----
+   save() is called on every keystroke, so the actual write is debounced: a
+   survey with photos is megabytes, and persisting it per character made typing
+   a note stutter. flushNow() forces the pending write out when the page is
+   being hidden or closed. */
+var lastSavedAt = null, saveTimer = null, savePending = false;
 function save() {
   exported = false;
-  lastSavedAt = Date.now();
-  if (memOnly) return;
-  try { if (!STORE) throw 0; STORE.setItem(KEY, JSON.stringify(S)); }
-  catch (e) { memOnly = true; toast("Storage full — export your work soon", true); }
+  S.updated = Date.now();
+  savePending = true;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persist, 400);
 }
+function flushNow() {
+  if (!savePending) return;
+  clearTimeout(saveTimer);
+  persist();
+}
+function persistFallback() {
+  try {
+    if (!STORE) throw 0;
+    STORE.setItem(KEY, JSON.stringify(S));
+    lastSavedAt = Date.now(); tickSaved();
+  } catch (e) {
+    if (!memOnly) { memOnly = true; toast("Storage full — export your work soon", true); }
+  }
+}
+function persist() {
+  savePending = false;
+  var meta;
+  try { meta = metaOf(); } catch (e) { meta = null; }
+  openDb(function (db) {
+    if (!db || !meta) return persistFallback();
+    var tx;
+    try {
+      tx = db.transaction([ST_FULL, ST_META], "readwrite");
+      /* put() structured-clones straight away, so later edits to S can't
+         corrupt the record this transaction is writing. */
+      tx.objectStore(ST_FULL).put(S);
+      tx.objectStore(ST_META).put(meta);
+    } catch (e) { return persistFallback(); }
+    tx.oncomplete = function () {
+      lastSavedAt = Date.now(); memOnly = false; tickSaved();
+      setCurrentId(S.id);
+    };
+    tx.onerror = tx.onabort = function () { persistFallback(); };
+  });
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "hidden") flushNow();
+});
+window.addEventListener("pagehide", flushNow);
+
+/* ---- keep the screen on ----
+   A surveyor working down a wall with gloves on shouldn't have to keep waking
+   the phone. The lock is dropped by the browser whenever the tab is hidden, so
+   re-take it on the way back. Unsupported browsers simply carry on. */
+var wakeLock = null;
+function keepAwake() {
+  if (wakeLock || !navigator.wakeLock || document.visibilityState !== "visible") return;
+  try {
+    navigator.wakeLock.request("screen").then(function (l) {
+      wakeLock = l;
+      l.addEventListener("release", function () { wakeLock = null; });
+    }).catch(function () {});
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") keepAwake();
+});
+document.addEventListener("click", keepAwake);
 function relTime(ms) {
   var s = Math.round((Date.now() - ms) / 1000);
   if (s < 5) return "just now";
@@ -1376,11 +1624,74 @@ function tickSaved() {
     el.innerHTML = ic("check", 12) + 'Saved ' + relTime(lastSavedAt) + (memOnly ? " · this device only" : "");
   }
 }
-function load() {
+function legacyLoad() {
   try {
     var raw = STORE && STORE.getItem(KEY);
     if (raw) { var p = JSON.parse(raw); for (var k in p) S[k] = p[k]; }
   } catch (e) { memOnly = true; }
+}
+/* Boot: open the survey that was last on screen. Falls back to the most
+   recently touched one, then to a one-off migration of anything left in the
+   old sessionStorage slot, then to a fresh blank survey. */
+function bootLoad(done) {
+  openDb(function (db) {
+    if (!db) { memOnly = !STORE; legacyLoad(); return done(); }
+    listSurveys(function (list) {
+      var want = getCurrentId(), rec = null, i;
+      for (i = 0; i < list.length; i++) if (list[i].id === want) { rec = list[i]; break; }
+      if (!rec && list.length) rec = list[0];
+      if (rec) {
+        return readSurvey(rec.id, function (full) {
+          if (full) { adopt(full); lastSavedAt = full.updated || null; setCurrentId(S.id); }
+          done();
+        });
+      }
+      legacyLoad();
+      if (S.areas.length || S.site || S.by) { S.updated = Date.now(); persist(); }
+      done();
+    });
+  });
+}
+
+/* ---- survey lifecycle ---- */
+/* Deliberately doesn't write the new survey straight away. The first save()
+   — entering site details, adding an area — persists it and makes it current.
+   Tapping "New survey" and backing out therefore leaves nothing behind, rather
+   than a row of empty "Untitled survey" entries. */
+function startSurvey() {
+  flushNow();
+  S = blank();
+  closeSheet(); go("survey");
+  setTimeout(function () { openSetup(true); }, 240);
+}
+function switchSurvey(id) {
+  if (id === S.id) { closeSheet(); return; }
+  flushNow();
+  readSurvey(id, function (rec) {
+    if (!rec) { toast("Couldn't open that survey", true); return; }
+    adopt(rec);
+    lastSavedAt = rec.updated || null;
+    exported = true;                    /* stored safely — nothing unsaved to warn about */
+    setCurrentId(S.id);
+    closeSheet(); go("survey");
+    toast("Opened " + (S.site || "untitled survey"));
+  });
+}
+function surveyLabel(m) { return m.site || "Untitled survey"; }
+
+/* ---- storage headroom ----
+   A warning before photos stop saving is worth far more than an error after. */
+var storagePct = null;
+function checkStorageRoom() {
+  try {
+    if (!navigator.storage || !navigator.storage.estimate) return;
+    navigator.storage.estimate().then(function (est) {
+      if (!est || !est.quota) return;
+      storagePct = Math.min(100, Math.round((est.usage || 0) / est.quota * 100));
+      if (storagePct >= 85) toast("Storage " + storagePct + "% full — export and clear old surveys", true);
+      tickSaved();
+    }).catch(function () {});
+  } catch (e) {}
 }
 
 /* ---------- helpers ---------- */
@@ -1931,6 +2242,9 @@ $("#fileIn").addEventListener("change", function (e) {
       }
       a.photos.push({ id: S.seq++, src: url, note: "", part: null });
       save(); render(); toast("Photo added to " + a.name);
+      /* Photos are what actually fills the quota, so this is the moment worth
+         re-checking how much room is left. */
+      if (a.photos.length % 5 === 0) checkStorageRoom();
     };
     img.onerror = function () { toast("Couldn't read that image", true); };
     img.src = ev.target.result;
@@ -2032,9 +2346,14 @@ function renderReport() {
      + '<button class="btn btn-ghost" id="expPdf">' + ic("pdf") + 'PDF report</button>'
      + '</div>'
      + '<button class="btn btn-ghost btn-block danger" id="reset" style="margin-top:18px">'
-     + ic("bin", 17) + 'Clear all data</button>'
-     + '<p class="hint" style="margin-top:12px">Held on this device only and cleared when you close the tab. '
-     + 'Export before you finish.</p>';
+     + ic("bin", 17) + 'Delete this survey</button>'
+     + '<p class="hint" style="margin-top:12px">'
+     + (dbReady && !memOnly
+         ? 'Saved on this phone and kept between visits — close the tab and it’s still here. '
+           + 'Nothing is uploaded, and no one else’s phone can see it.'
+           + (storagePct !== null ? ' Storage ' + storagePct + '% used.' : '')
+         : 'Held in this tab only and cleared when you close it. Export before you finish.')
+     + '</p>';
 
   $("#s-report").innerHTML = h;
 
@@ -2054,26 +2373,94 @@ var GUIDE_CAT_DESC = {
   F: "Red rectangle. Marks the location of fire-fighting equipment.",
   N: "Required by law, but without a standard pictogram or colour."
 };
-var GQ = "";
+
+/* Reference content below is written against the regulations and standards
+   themselves, not copied from any supplier's catalogue. Anything that is
+   common practice rather than a legal minimum says so — a surveyor quoting
+   this at a client needs to know which is which. */
+var GUIDE_MATERIALS = [
+  ["SAV", "Self-adhesive vinyl", "Cheapest and thinnest. Smooth, clean, dry indoor surfaces only — it will not hold on textured brick, dusty block, or anything cold and damp."],
+  ["RPVC", "Rigid PVC", "The general-purpose choice. Holds its shape, takes a screw or a bonding pad, fine indoors and in sheltered outdoor spots."],
+  ["FMX", "Foamex / foam PVC", "Light rigid board. Good for larger interior panels where a full rigid sheet would be heavy or expensive."],
+  ["ACM / ACP", "Aluminium composite", "For exposed exterior use and long life. Won't warp, curl or fade the way plastics do outdoors."],
+  ["PHO / PHS", "Photoluminescent", "Glows once the lights fail. Used on escape routes as a backup to emergency lighting — it only works if it has had light on it to charge."],
+  ["SSS / SSE", "Stainless steel", "Front-of-house, clean rooms and food areas, where the sign has to look right and be wiped down."],
+  ["MAG", "Magnetic", "Temporary. Goes on plant, vehicles and steel doors, and comes off again without a mark."]
+];
+
+var GUIDE_SIZES = [
+  ["Up to 10 m", "100 mm", "100 mm"],
+  ["Up to 15 m", "150 mm", "150 mm"],
+  ["Up to 20 m", "200 mm", "200 mm"],
+  ["Up to 30 m", "300 mm", "300 mm"],
+  ["Up to 40 m", "400 mm", "400 mm"]
+];
+
+var GUIDE_REGS = [
+  ["Health and Safety (Safety Signs and Signals) Regulations 1996",
+   "The core duty. Where a risk can't be avoided or controlled another way, a safety sign must be provided — and it has to follow the prescribed shape and colour for its type."],
+  ["BS EN ISO 7010", "The pictogram standard. Fixes one agreed symbol per hazard so a sign reads the same to anyone, in any language. New signage should be to this standard."],
+  ["Regulatory Reform (Fire Safety) Order 2005",
+   "Puts fire safety on the 'responsible person'. Escape routes must be signed, fire-fighting equipment must be indicated, and both must be maintained."],
+  ["BS 5499-4 and BS 5499-10", "Guidance on choosing, siting and maintaining escape-route signage, and on how far a sign can be read from."],
+  ["BS EN 1838 / BS 5266", "Emergency lighting. Sets what has to stay lit, and how escape signs behave when the mains supply fails."],
+  ["Health Act 2006", "Smoke-free premises. A no-smoking sign is required at every enclosed workplace entrance."],
+  ["Health and Safety Information for Employees Regulations 1989",
+   "The HSE 'Health and Safety Law' poster must be displayed, or the equivalent leaflet issued to every employee."],
+  ["Employers' Liability (Compulsory Insurance) Regulations 1998",
+   "The certificate must be displayed where employees can read it, or be accessible to them electronically."],
+  ["Electricity at Work Regulations 1989", "Underpins the warning and restricted-access signage on intake rooms, panels and switchgear."],
+  ["Control of Noise at Work Regulations 2005",
+   "Above the upper action value the area must be marked as a hearing protection zone and the protection worn."],
+  ["PUWER 1998", "Machinery markings, warnings and the signing of emergency stops and isolation points."],
+  ["Construction (Design and Management) Regulations 2015", "Site signage duties where the work is construction rather than occupation."]
+];
+
+var GUIDE_FINDINGS = [
+  ["Faded or yellowed", "Most common failure outdoors and in sunlit corridors. If the colour has shifted, the sign no longer carries the meaning its colour is supposed to."],
+  ["Obstructed", "Stock, racking, a coat rack or a propped-open door in front of a sign is the same as no sign. Check with the door in both positions."],
+  ["Wrong standard mixed in", "Older BS 5499 running-man signs are not automatically wrong, but a route signed half in one system and half in the other is confusing. Keep one system per escape route."],
+  ["Nothing to charge it", "Photoluminescent signs in a store room that is normally dark will not glow when they are needed."],
+  ["Peeling or curled", "Usually self-adhesive vinyl put on the wrong surface. Re-specify the material rather than re-sticking the same thing."],
+  ["Right sign, wrong place", "A sign has to be where the decision is made — at the hazard, at the door, at the entrance to the zone — not around the corner from it."],
+  ["No longer applicable", "Processes move. A hearing-protection zone that is now an office is worth recording as N/A so the customer can take it down."]
+];
+
+var GQ = "", GTAB = "signs";
 function renderGuide() {
   var zones = 0, seen = {};
   for (var zi = 0; zi < TPL.length; zi++) if (!seen[TPL[zi][0]]) { seen[TPL[zi][0]] = 1; zones++; }
   var h = '<h1 style="margin:2px 0 4px">Sign &amp; regulation guide</h1>'
     + '<p class="hint" style="margin-top:0">' + TPL.length + ' signs across ' + zones
-    + ' areas of a typical site — what each one looks like, and the regulation it relates to.</p>'
-    + '<div class="searchwrap" style="position:static;padding:2px 0 4px;margin:0"><div class="searchbar">'
+    + ' areas of a typical site, how to specify them, and the rules behind them.</p>'
+    + '<div class="segmented" role="tablist">'
+    +   seg("signs", "Signs") + seg("spec", "Specifying") + seg("regs", "Regulations")
+    + '</div>'
+    + '<div id="guideBody"></div>';
+  $("#s-guide").innerHTML = h;
+  renderGuideBody();
+
+  function seg(k, label) {
+    return '<button data-gtab="' + k + '" class="' + (GTAB === k ? "on" : "") + '" role="tab" '
+      + 'aria-selected="' + (GTAB === k ? "true" : "false") + '">' + label + '</button>';
+  }
+}
+function renderGuideBody() {
+  var el = $("#guideBody"); if (!el) return;
+  if (GTAB === "spec") { el.innerHTML = guideSpecHtml(); return; }
+  if (GTAB === "regs") { el.innerHTML = guideRegsHtml(); return; }
+  el.innerHTML =
+      '<div class="searchwrap" style="position:static;padding:10px 0 4px;margin:0"><div class="searchbar">'
     + ic("search", 18, "mag")
     + '<input id="gq" type="search" placeholder="Search signs or regulations" autocomplete="off" '
-    + 'autocorrect="off" autocapitalize="none" spellcheck="false">'
-    + '<button class="clr" id="gClr" aria-label="Clear search" hidden>' + ic("x", 16) + '</button>'
+    + 'autocorrect="off" autocapitalize="none" spellcheck="false" value="' + esc(GQ) + '">'
+    + '<button class="clr" id="gClr" aria-label="Clear search"' + (GQ ? "" : " hidden") + '>' + ic("x", 16) + '</button>'
     + '</div></div>'
     + '<div id="guideLegend"></div>'
     + '<div id="guideList"></div>'
-    + '<p class="hint" style="margin-top:22px">This guide mirrors the standard sign set built into this app. '
+    + '<p class="hint" style="margin-top:22px">This list mirrors the standard sign set built into the app. '
     + 'Treat it as a quick reference — always confirm current requirements against the full regulation text '
-    + 'and your site’s own risk assessment.</p>';
-  $("#s-guide").innerHTML = h;
-  $("#gq").value = GQ;
+    + 'and the site’s own risk assessment.</p>';
   renderGuideLegend();
   renderGuideList();
 }
@@ -2111,6 +2498,82 @@ function renderGuideList() {
   h += shown ? list : empty("search", "No signs match", "Try a different word, or check the spelling.");
   el.innerHTML = h;
 }
+
+/* ---- specifying ---- */
+function guideSpecHtml() {
+  /* Stacked rather than tabular: three columns of prose on a 390px phone
+     leaves the useful column about 40% of the screen and unreadable. */
+  var i, h = '<div class="sectionhead" style="margin-top:18px">'
+    + '<span class="eyebrow">Choosing the material</span><span class="line"></span></div>'
+    + '<div class="refblock"><p>The code in a part number tells you what the sign is made of. '
+    + 'Getting this wrong is the most common reason a sign has to be replaced early.</p>';
+  for (i = 0; i < GUIDE_MATERIALS.length; i++) {
+    h += '<div class="matrow"><div class="matrow-head"><span class="pn">' + esc(GUIDE_MATERIALS[i][0])
+       + '</span><b>' + esc(GUIDE_MATERIALS[i][1]) + '</b></div>'
+       + '<p>' + esc(GUIDE_MATERIALS[i][2]) + '</p></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="sectionhead"><span class="eyebrow">Size and viewing distance</span><span class="line"></span></div>'
+    + '<div class="refblock">'
+    + '<p>For escape-route signs the relationship is fixed: the furthest someone can be and still read the '
+    + 'sign is <b>100 × the height of the sign</b> for an ordinary or externally lit sign, and '
+    + '<b>200 ×</b> for an internally illuminated one. A 150 mm sign is therefore good for 15 m, '
+    + 'or 30 m if it is lit from within.</p>'
+    + '<div class="reftable-wrap"><table class="reftable"><thead><tr>'
+    + '<th>Read from</th><th>Escape sign</th><th>Other safety signs</th></tr></thead><tbody>';
+  for (i = 0; i < GUIDE_SIZES.length; i++) {
+    h += '<tr><td>' + esc(GUIDE_SIZES[i][0]) + '</td><td>' + esc(GUIDE_SIZES[i][1])
+       + '</td><td>' + esc(GUIDE_SIZES[i][2]) + '</td></tr>';
+  }
+  h += '</tbody></table></div>'
+    + '<p class="refnote">The escape-route column is the BS 5499-4 / BS EN 1838 rule. The right-hand column '
+    + 'is normal practice for prohibition, mandatory and warning signs rather than a legal minimum — '
+    + 'ISO 3864-1 sets these by a distance factor that also takes lighting into account, so measure up '
+    + 'rather than assume in a poorly lit space.</p></div>';
+
+  h += '<div class="sectionhead"><span class="eyebrow">Where it goes</span><span class="line"></span></div>'
+    + '<div class="refblock"><ul>'
+    + '<li><b>At the decision, not past it.</b> A sign has to be visible at the point where someone chooses '
+    + 'what to do — the doorway, the junction, the entrance to the zone.</li>'
+    + '<li><b>Mandatory PPE signs at the threshold</b> of the area the PPE is needed in, so it can be put on '
+    + 'before entering rather than after.</li>'
+    + '<li><b>Fire equipment ID above the unit</b>, high enough to be found when the extinguisher itself is '
+    + 'behind a pallet or a coat.</li>'
+    + '<li><b>Escape signs in a continuous line.</b> From any point on the route the next sign should be '
+    + 'visible; typical mounting is 2.0–2.5 m above the floor, or directly above the opening on a door.</li>'
+    + '<li><b>Check the door open as well as shut.</b> A sign a fire door covers when it is propped is a sign '
+    + 'that isn’t there.</li>'
+    + '<li><b>Don’t mix sign systems on one route.</b> Older BS 5499 and current ISO 7010 running men are both '
+    + 'legible, but alternating between them along a corridor is not.</li>'
+    + '</ul></div>';
+
+  h += '<div class="sectionhead"><span class="eyebrow">What to look for on site</span><span class="line"></span></div>'
+    + '<div class="refblock"><ul>';
+  for (i = 0; i < GUIDE_FINDINGS.length; i++) {
+    h += '<li><b>' + esc(GUIDE_FINDINGS[i][0]) + '.</b> ' + esc(GUIDE_FINDINGS[i][1]) + '</li>';
+  }
+  h += '</ul></div>';
+  return h;
+}
+
+/* ---- regulations ---- */
+function guideRegsHtml() {
+  var h = '<div class="sectionhead" style="margin-top:18px">'
+    + '<span class="eyebrow">What sits behind each sign</span><span class="line"></span></div>'
+    + '<div class="refblock"><p>Every sign in the survey list cites one of these. The wording below is a '
+    + 'plain-English summary of the duty, not the legal text.</p></div>';
+  for (var i = 0; i < GUIDE_REGS.length; i++) {
+    h += '<div class="refblock"><h3>' + esc(GUIDE_REGS[i][0]) + '</h3><p>' + esc(GUIDE_REGS[i][1]) + '</p></div>';
+  }
+  h += '<div class="refblock"><h3>Statutory or advisory?</h3>'
+    + '<p><b>Statutory</b> in this app means a specific regulation requires the sign, and its absence is a '
+    + 'finding a customer needs to act on. <b>Advisory</b> means it is good practice, expected by an insurer, '
+    + 'or driven by the site’s own risk assessment rather than by a named regulation.</p>'
+    + '<p class="refnote">A risk assessment can make an advisory sign compulsory on a particular site. '
+    + 'Where the two disagree, the risk assessment wins.</p></div>';
+  return h;
+}
 function guideCard(idx, t, a) {
   var already = false;
   if (a) for (var i = 0; i < a.signs.length; i++) if (a.signs[i].tpl === idx) already = true;
@@ -2136,6 +2599,94 @@ function closeSheet() { $("#overlay").classList.remove("on"); }
 $("#overlay").addEventListener("click", function (e) { if (e.target === this) closeSheet(); });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
+/* ---- saved surveys ----
+   Surveys are kept side by side rather than in one slot that has to be
+   cleared: a half-finished job from Tuesday stays put while today's is
+   recorded. The list is drawn from the small "meta" store, so opening it is
+   instant no matter how many photos the surveys hold. */
+function openSurveys() {
+  openSheet('<div class="grab"></div><h2>Surveys</h2>'
+    + '<p class="sheet-lede">Every survey recorded on this phone. They stay here until you delete them.</p>'
+    + '<div id="surveyList"><div class="skel"></div><div class="skel"></div></div>'
+    + '<button class="btn btn-primary btn-block" id="newSurvey" style="margin-top:4px">'
+    + ic("plus", 16) + 'Start a new survey</button>'
+    + '<p class="hint" style="margin-top:10px">Held on this device only — never uploaded, and not visible '
+    + 'to anyone else’s phone.</p>');
+  paintSurveyList();
+}
+function paintSurveyList() {
+  var el = $("#surveyList"); if (!el) return;
+  listSurveys(function (list) {
+    el = $("#surveyList"); if (!el) return;
+    if (!dbReady) {
+      el.innerHTML = '<p class="hint" style="margin:0 0 12px">This browser won’t let the app keep more '
+        + 'than the survey you’re working on. Export before you close the tab.</p>';
+      return;
+    }
+    /* The open survey may be brand new and not yet in the meta store. */
+    var seen = false, i;
+    for (i = 0; i < list.length; i++) if (list[i].id === S.id) seen = true;
+    if (!seen) list.unshift(metaOf());
+
+    var h = "";
+    for (i = 0; i < list.length; i++) {
+      var m = list[i], cur = m.id === S.id;
+      var bits = [];
+      if (m.areas) bits.push(m.areas + (m.areas > 1 ? " areas" : " area"));
+      if (m.signs) bits.push(m.checked + " of " + m.signs + " signs");
+      if (m.products) bits.push(m.products + (m.products > 1 ? " products" : " product"));
+      if (m.photos) bits.push(m.photos + (m.photos > 1 ? " photos" : " photo"));
+      h += '<div class="surveyrow' + (cur ? " cur" : "") + '">'
+         + '<button class="surveyrow-main" data-opensurvey="' + esc(m.id) + '">'
+         +   '<div class="surveyrow-name">' + esc(surveyLabel(m))
+         +     (cur ? '<span class="pill blue">Open</span>' : "") + '</div>'
+         +   '<div class="surveyrow-meta">' + (bits.length ? esc(bits.join(" · ")) : "Nothing recorded yet")
+         +     (m.open ? ' · <b class="warnnum">' + m.open + ' need attention</b>' : "") + '</div>'
+         +   '<div class="surveyrow-when">' + esc(m.date ? ukDate(m.date) : "No date")
+         +     (m.updated ? " · edited " + relTime(m.updated) : "") + '</div>'
+         + '</button>'
+         + '<button class="del faint" data-delsurvey="' + esc(m.id) + '" aria-label="Delete '
+         + esc(surveyLabel(m)) + '">' + ic("bin", 16) + '</button>'
+         + '</div>';
+    }
+    el.innerHTML = h;
+  });
+}
+function confirmDeleteSurvey(id) {
+  listSurveys(function (list) {
+    var m = null, i;
+    for (i = 0; i < list.length; i++) if (list[i].id === id) m = list[i];
+    var name = m ? surveyLabel(m) : (id === S.id ? surveyLabel(S) : "this survey");
+    confirmSheet({
+      title: "Delete " + name + "?",
+      body: "Every area, product, photo and note in it is removed from this device. This can’t be undone.",
+      yes: "Delete survey", no: "Keep it", danger: true,
+      onNo: openSurveys,
+      onYes: function () {
+        /* Drop any queued write first, or a debounced save from a second ago
+           would put the record straight back after the delete. */
+        if (id === S.id) { savePending = false; clearTimeout(saveTimer); }
+        deleteSurvey(id, function () {
+          if (id !== S.id) { openSurveys(); toast("Survey deleted"); return; }
+          /* Deleted the one that's open — fall through to the next most
+             recent, or start fresh if that was the last one. */
+          listSurveys(function (rest) {
+            if (rest.length) {
+              readSurvey(rest[0].id, function (rec) {
+                if (rec) { adopt(rec); lastSavedAt = rec.updated || null; exported = true; setCurrentId(S.id); }
+                closeSheet(); go("survey"); toast("Survey deleted");
+              });
+            } else {
+              S = blank(); exported = true;
+              closeSheet(); go("survey"); toast("Survey deleted");
+            }
+          });
+        });
+      }
+    });
+  });
+}
+
 function openSetup(first) {
   openSheet('<div class="grab"></div>'
     + '<h2>' + (first ? "Before you start" : "Site details") + '</h2>'
@@ -2145,16 +2696,33 @@ function openSetup(first) {
     + fld("by", "Surveyor", S.by, "Your name")
     + '<div class="field"><label class="eyebrow" for="f-date">Date</label>'
     + '<input id="f-date" type="date" value="' + esc(S.date || new Date().toISOString().slice(0, 10)) + '"></div>'
+    + '<div class="field"><label class="eyebrow" for="f-pc">Site postcode</label>'
+    +   '<div class="inlinefield">'
+    +     '<input id="f-pc" value="' + esc(S.postcode) + '" placeholder="e.g. IP1 5AN" '
+    +       'autocomplete="postal-code" autocapitalize="characters" spellcheck="false">'
+    +     '<button class="btn btn-ghost" id="pcLook" type="button">Look up</button>'
+    +   '</div></div>'
+    + '<div id="pcLine">' + addrLine() + '</div>'
+    + '<div class="field"><label class="eyebrow">Location</label>'
+    +   '<button class="btn btn-ghost btn-block" id="geoGet" type="button">'
+    +   ic("pin", 16) + (S.geo ? "Update location" : "Capture location") + '</button></div>'
+    + '<div id="geoLine">' + geoLine() + '</div>'
     + '<button class="btn btn-primary btn-block" id="saveSetup">' + (first ? "Start survey" : "Save") + '</button>'
     + (first ? "" : '<button class="btn btn-ghost btn-block danger" id="wipe" style="margin-top:8px">'
-        + ic("bin", 16) + 'Clear all data</button>'));
+        + ic("bin", 16) + 'Delete this survey</button>'));
   document.querySelectorAll("#f-site,#f-by").forEach(function (inp) {
     inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); $("#saveSetup").click(); } });
   });
+  $("#f-pc").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); lookupPostcode(); }
+  });
+  $("#pcLook").addEventListener("click", lookupPostcode);
+  $("#geoGet").addEventListener("click", captureLocation);
   $("#saveSetup").addEventListener("click", function () {
     S.site = $("#f-site").value.trim();
     S.by = $("#f-by").value.trim();
     S.date = $("#f-date").value;
+    S.postcode = $("#f-pc").value.trim().toUpperCase();
     S.seen = true;
     save(); closeSheet(); render();
   });
@@ -2162,6 +2730,99 @@ function openSetup(first) {
     return '<div class="field"><label class="eyebrow" for="f-' + id + '">' + label + '</label>'
       + '<input id="f-' + id + '" value="' + esc(val) + '" placeholder="' + ph + '" autocomplete="off"></div>';
   }
+}
+function addrLine(msg, busy) {
+  if (msg) return '<div class="metaline' + (busy ? " busy" : "") + '">' + ic("info", 13) + '<span>' + esc(msg) + '</span></div>';
+  if (!S.addr) return "";
+  return '<div class="metaline">' + ic("check", 13) + '<span>' + esc(S.addr) + '</span>'
+    + '<button type="button" id="pcClear">Clear</button></div>';
+}
+function geoLine(msg, busy) {
+  if (msg) return '<div class="metaline' + (busy ? " busy" : "") + '">' + ic("info", 13) + '<span>' + esc(msg) + '</span></div>';
+  if (!S.geo) return "";
+  return '<div class="metaline">' + ic("check", 13)
+    + '<span>' + esc(geoText(S.geo)) + '  ·  ' + esc(geoSource(S.geo)) + '</span>'
+    + '<button type="button" id="geoClear">Clear</button></div>';
+}
+function geoText(g) {
+  if (!g) return "";
+  return g.lat.toFixed(5) + ", " + g.lon.toFixed(5)
+    + (g.acc ? "  ·  ±" + Math.round(g.acc) + " m" : "");
+}
+/* A pin derived from the postcode is the middle of a whole postcode area, not
+   where the surveyor stood — never let the two look the same on screen. */
+function geoSource(g) { return g && g.from === "postcode" ? "postcode centre" : "GPS fix"; }
+
+/* Postcode -> town/county, via postcodes.io (free, no key, no sign-in).
+   Every failure path is silent and harmless: the typed postcode is kept and
+   the survey carries on exactly as it would with no network at all. */
+function lookupPostcode() {
+  var inp = $("#f-pc"); if (!inp) return;
+  var pc = inp.value.trim();
+  var line = $("#pcLine"); if (!line) return;
+  if (!pc) { S.addr = ""; line.innerHTML = ""; return; }
+  if (!window.fetch) { line.innerHTML = addrLine("Look-up isn’t available in this browser."); return; }
+  line.innerHTML = addrLine("Looking up " + pc + "…", true);
+
+  var done = false, ctrl = null, timer;
+  try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+  timer = setTimeout(function () {
+    if (done) return;
+    done = true;
+    try { if (ctrl) ctrl.abort(); } catch (e) {}
+    var l = $("#pcLine"); if (l) l.innerHTML = addrLine("No answer — check your signal, or just type the site name.");
+  }, 8000);
+
+  fetch("https://api.postcodes.io/postcodes/" + encodeURIComponent(pc.replace(/\s+/g, "")),
+        ctrl ? { signal: ctrl.signal } : undefined)
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      if (done) return;
+      done = true; clearTimeout(timer);
+      var l = $("#pcLine"); if (!l) return;
+      var res = j && j.result;
+      if (!res) { l.innerHTML = addrLine("That postcode wasn’t found — you can still type the site name."); return; }
+      var parts = [];
+      if (res.admin_district) parts.push(res.admin_district);
+      if (res.admin_county) parts.push(res.admin_county);
+      else if (res.region && res.region !== res.admin_district) parts.push(res.region);
+      S.addr = parts.join(", ");
+      S.postcode = res.postcode || pc.toUpperCase();
+      var pcIn = $("#f-pc"); if (pcIn) pcIn.value = S.postcode;
+      /* A postcode centroid is a useful fallback pin, but never overwrite a
+         real GPS fix taken while standing on the site. */
+      if (!S.geo && typeof res.latitude === "number" && typeof res.longitude === "number") {
+        S.geo = { lat: res.latitude, lon: res.longitude, acc: null, at: Date.now(), from: "postcode" };
+        var gl = $("#geoLine"); if (gl) gl.innerHTML = geoLine();
+        var gb = $("#geoGet"); if (gb) gb.innerHTML = ic("pin", 16) + "Update location";
+      }
+      save();
+      l.innerHTML = addrLine();
+    })
+    .catch(function () {
+      if (done) return;
+      done = true; clearTimeout(timer);
+      var l = $("#pcLine");
+      if (l) l.innerHTML = addrLine("Couldn’t reach the look-up — you can still type the site name.");
+    });
+}
+function captureLocation() {
+  var line = $("#geoLine"); if (!line) return;
+  if (!navigator.geolocation) { line.innerHTML = geoLine("This browser can’t provide a location."); return; }
+  line.innerHTML = geoLine("Finding you…", true);
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    S.geo = { lat: pos.coords.latitude, lon: pos.coords.longitude,
+              acc: pos.coords.accuracy, at: Date.now(), from: "gps" };
+    save();
+    var l = $("#geoLine"); if (l) l.innerHTML = geoLine();
+    var g = $("#geoGet"); if (g) g.innerHTML = ic("pin", 16) + "Update location";
+    toast("Location captured");
+  }, function (err) {
+    var l = $("#geoLine"); if (!l) return;
+    l.innerHTML = geoLine(err && err.code === 1
+      ? "Location permission was declined — the survey works fine without it."
+      : "Couldn’t get a fix. Try again outdoors or near a window.");
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
 }
 
 function openAddArea() {
@@ -2387,7 +3048,9 @@ function confirmSheet(o) {
     + '<button class="btn btn-ghost btn-block" id="cfNo" style="margin-top:8px">'
     + esc(o.no || "Cancel") + '</button>');
   $("#cfYes").addEventListener("click", function () { closeSheet(); o.onYes(); });
-  $("#cfNo").addEventListener("click", closeSheet);
+  $("#cfNo").addEventListener("click", function () {
+    if (o.onNo) o.onNo(); else closeSheet();
+  });
 }
 
 function openAreaMenu() {
@@ -2465,6 +3128,15 @@ function duplicateArea(a) {
 }
 
 /* ================= EXPORTS ================= */
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+/* "2026-09-07" -> "7 Sep 2026". Unambiguous for a UK office, where a bare
+   07/09/2026 can read as either day or month first. */
+function ukDate(iso) {
+  if (!iso) return "—";
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  return (+m[3]) + " " + MONTHS[(+m[2]) - 1] + " " + m[1];
+}
 function fileStem() {
   var s = "Signage survey" + (S.site ? " - " + S.site : "");
   return s.replace(/[\/\\:*?"<>|]/g, "-");
@@ -2477,109 +3149,150 @@ function dl(blob, name) {
 
 function exportXlsx() {
   var W = 0, T = 1, SEC = 2, HD = 3, AREA = 4, B = 5, MUT = 6,
-      ST_OK = 7, ST_MISS = 8, ST_DAM = 9, TAG_STAT = 10, TAG_ADV = 11, KPI = 12;
+      ST_OK = 7, ST_MISS = 8, ST_DAM = 9, TAG_STAT = 10, TAG_ADV = 11, KPI = 12,
+      NUM = 13, NUMB = 14;
   function statusStyle(st) {
     return st === "OK" ? ST_OK : st === "Missing" ? ST_MISS : st === "Damaged" ? ST_DAM : 0;
   }
-  var rows = [], i, j, k;
-  rows.push([{ v: "SPECTRUM INDUSTRIAL — SIGNAGE SURVEY", s: T }]);
-  rows.push([{ v: "Site", s: B }, S.site || "—", { v: "Surveyor", s: B }, S.by || "—",
-             { v: "Date", s: B }, S.date || "—"]);
-  var t = surveyStats();
-  rows.push([{ v: "Statutory compliance", s: B }, { v: (t.pct === null ? "—" : t.pct + "%"), s: KPI },
-             { v: "Areas", s: B }, t.areas, { v: "Products", s: B }, t.lines]);
-  rows.push([]);
+
+  /* ---- collect the line items ----
+     One flat list, one row per thing the office has to act on: every product
+     chosen, every part pinned to a photo, and every sign found missing or
+     damaged that hasn't had a product picked yet.
+
+     Three kinds of row are deliberately left out, because listing them is what
+     made the old sheet unreadable and none of them is an instruction to anyone:
+     signs already in place, signs ruled out as not applicable, and signs the
+     surveyor hasn't reached yet. The counts are carried in the header instead,
+     and the PDF remains the full survey record. */
+  var items = [], i, j, k;
+  function push(o) {
+    items.push([o.loc, o.pn, o.desc, o.mat, o.size,
+                { v: o.qty, s: NUM },
+                { v: o.status, s: statusStyle(o.rawStatus) },
+                o.req, o.note]);
+  }
+  function ref(bits) { return bits.filter(Boolean).join(" · "); }
+  var settled = 0, unchecked = 0, totalUnits = 0;
 
   for (i = 0; i < S.areas.length; i++) {
-    var a = S.areas[i], st = areaStats(a);
-    rows.push([{ v: a.name.toUpperCase(), s: AREA }]);
-    rows.push([{ v: (a.done ? "Complete" : "In progress") + " · " + st.done + " of " + st.total
-                 + " signs checked", s: MUT }]);
-    if (a.note) rows.push([{ v: "Area note", s: B }, { v: a.note, s: MUT }]);
-    rows.push([{ v: "Sign", s: HD }, { v: "Status", s: HD }, { v: "Requirement", s: HD },
-               { v: "Product / SKU", s: HD }, { v: "Qty", s: HD }, { v: "Notes", s: HD }]);
+    var a = S.areas[i];
 
     for (j = 0; j < a.signs.length; j++) {
-      var s = a.signs[j];
-      var prods = [], notes = s.note ? [s.note] : [];
-      for (k = 0; k < a.order.length; k++) {
-        if (a.order[k].signId === s.id) prods.push(a.order[k]);
-      }
-      if (!prods.length) {
-        rows.push([s.name, { v: s.st || "Not checked", s: statusStyle(s.st) },
-                   { v: s.statutory ? "Statutory" : "Advisory", s: s.statutory ? TAG_STAT : TAG_ADV },
-                   "", "", notes.join(" / ")]);
-      } else {
+      var s = a.signs[j], prods = [];
+      for (k = 0; k < a.order.length; k++) if (a.order[k].signId === s.id) prods.push(a.order[k]);
+
+      if (prods.length) {
         for (k = 0; k < prods.length; k++) {
           var p = prods[k];
-          rows.push([k === 0 ? s.name : "",
-                     k === 0 ? { v: s.st || "Not checked", s: statusStyle(s.st) } : "",
-                     k === 0 ? { v: s.statutory ? "Statutory" : "Advisory", s: s.statutory ? TAG_STAT : TAG_ADV } : "",
-                     (p.pn || "CUSTOM") + " — " + p.name, p.qty,
-                     [k === 0 ? notes.join(" / ") : "", p.note].filter(Boolean).join(" / ")]);
+          push({ loc: a.name, pn: p.pn || "CUSTOM", desc: p.name, mat: p.mat || "", size: p.size || "",
+                 qty: p.qty, status: s.st || "For supply", rawStatus: s.st,
+                 req: s.statutory ? "Statutory" : "Advisory",
+                 note: ref(["For: " + s.name, s.note, p.note]) });
+          totalUnits += p.qty;
         }
+        continue;
       }
+      if (s.st === "OK" || s.st === "N/A") { settled++; continue; }
+      if (!s.st) { unchecked++; continue; }
+      /* Missing or damaged with nothing specified — the office quotes this one. */
+      push({ loc: a.name, pn: "—", desc: s.name, mat: "", size: "", qty: s.qty || 1,
+             status: s.st, rawStatus: s.st,
+             req: s.statutory ? "Statutory" : "Advisory", note: s.note || "" });
+      totalUnits += (s.qty || 1);
     }
-    /* products not tied to a specific sign */
-    var loose = [];
-    for (k = 0; k < a.order.length; k++) if (!a.order[k].signId) loose.push(a.order[k]);
-    for (k = 0; k < loose.length; k++) {
-      rows.push([k === 0 ? "Additional products" : "", "", "",
-                 (loose[k].pn || "CUSTOM") + " — " + loose[k].name, loose[k].qty, loose[k].note || ""]);
-    }
-    if (a.photos.length) {
-      var caps = [];
-      for (k = 0; k < a.photos.length; k++) {
-        var capPh = a.photos[k];
-        var capTxt = (k + 1) + ". " + (capPh.note || "no description");
-        if (capPh.part) capTxt += "  [Part: " + partLabel(capPh.part) + "]";
-        caps.push(capTxt);
-      }
-      rows.push([{ v: "Photos (" + a.photos.length + ")", s: B }, { v: caps.join("  |  "), s: MUT }]);
-    }
-    rows.push([]);
-  }
 
-  if (S.note) {
-    rows.push([{ v: "GENERAL SURVEY NOTES", s: SEC }]);
-    rows.push([{ v: S.note, s: MUT }]);
-    rows.push([]);
-  }
-
-  /* order summary sheet */
-  var o = [[{ v: "ORDER SUMMARY", s: T }],
-           [{ v: "Site", s: B }, S.site || "—", { v: "Date", s: B }, S.date || "—"], []];
-  o.push([{ v: "Area", s: HD }, { v: "Part No / SKU", s: HD }, { v: "Description", s: HD },
-          { v: "Material", s: HD }, { v: "Size", s: HD }, { v: "Qty", s: HD },
-          { v: "Against sign", s: HD }, { v: "Notes", s: HD }]);
-  var orderRows = 0;
-  for (i = 0; i < S.areas.length; i++) {
-    var ar = S.areas[i];
-    for (j = 0; j < ar.order.length; j++) {
-      var od = ar.order[j], against = "";
-      if (od.signId) for (k = 0; k < ar.signs.length; k++) if (ar.signs[k].id === od.signId) against = ar.signs[k].name;
-      o.push([ar.name, od.pn || "CUSTOM", od.name, od.mat || "", od.size || "", od.qty,
-              against, od.note || ""]);
-      orderRows++;
+    for (k = 0; k < a.order.length; k++) {
+      var od = a.order[k];
+      if (od.signId) continue;                       /* already emitted above */
+      push({ loc: a.name, pn: od.pn || "CUSTOM", desc: od.name, mat: od.mat || "", size: od.size || "",
+             qty: od.qty, status: "For supply", rawStatus: "", req: "—", note: od.note || "" });
+      totalUnits += od.qty;
     }
-    /* Parts attached to a photo belong here too so the office can quote from
-       one list. Same columns as an order line: qty is 1 (one part identified on
-       one photo), and it points back at the photo the way a product points at
-       its sign. */
-    for (var pi = 0; pi < ar.photos.length; pi++) {
-      var pp = ar.photos[pi].part;
+
+    for (k = 0; k < a.photos.length; k++) {
+      var pp = a.photos[k].part;
       if (!pp) continue;
-      o.push([ar.name, pp.pn || "CUSTOM", pp.name, pp.mat || "", pp.size || "", 1,
-              "Photo " + (pi + 1), ar.photos[pi].note || ""]);
-      orderRows++;
+      push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
+             qty: 1, status: "For supply", rawStatus: "", req: "—",
+             note: ref(["Photo " + (k + 1), a.photos[k].note]) });
+      totalUnits += 1;
     }
   }
-  if (!orderRows) o.push([{ v: "No products specified.", s: MUT }]);
 
-  var bytes = buildXlsx([
-    { name: "Survey", rows: rows, widths: [42, 13, 13, 40, 6, 34] },
-    { name: "Order summary", rows: o, widths: [20, 15, 42, 12, 16, 6, 30, 28] }
-  ]);
+  /* ---- lay the sheet out ---- */
+  var COLS = 9, LAST = colName(COLS);
+  var t = surveyStats(), rows = [];
+  rows.push([{ v: "SIGNAGE SURVEY — ORDER & ACTION LIST", s: T }]);
+  rows.push([{ v: "Spectrum Industrial · part of Centurion Europe", s: MUT }]);
+  rows.push([]);
+
+  /* Header meta: labels in column A/E, values merged across the columns after
+     them. Dropping a value straight into a 6-character-wide column made it
+     wrap over four lines and the whole block looked broken. */
+  var merges = ["A1:" + LAST + "1", "A2:" + LAST + "2"];
+  function metaRow(l1, v1, l2, v2) {
+    var r = [{ v: l1, s: B }, v1, "", "", { v: l2 || "", s: B }, v2 || "", "", "", ""];
+    var n = rows.length + 1;
+    merges.push("B" + n + ":D" + n);
+    if (l2) merges.push("F" + n + ":" + LAST + n);
+    rows.push(r);
+  }
+  function wideRow(label, value) {
+    var n = rows.length + 1;
+    merges.push("B" + n + ":" + LAST + n);
+    rows.push([{ v: label, s: B }, value, "", "", "", "", "", "", ""]);
+  }
+
+  var siteBits = [S.site || "—"];
+  if (S.addr) siteBits.push(S.addr);
+  if (S.postcode) siteBits.push(S.postcode);
+  metaRow("Site", siteBits.join(", "), "Surveyor", S.by || "—");
+  metaRow("Date", ukDate(S.date), "Statutory", t.pct === null ? "—" : t.pct + "% of those checked in place");
+  wideRow("This list", items.length + (items.length === 1 ? " line" : " lines")
+    + " · " + totalUnits + (totalUnits === 1 ? " unit" : " units"));
+  var caveats = [];
+  if (settled) caveats.push(settled + " sign" + (settled === 1 ? "" : "s") + " already in place or not applicable");
+  if (unchecked) caveats.push(unchecked + " not yet checked");
+  if (caveats.length) {
+    wideRow("Not listed", { v: caveats.join(" · ") + " — the PDF report carries the full survey record.", s: MUT });
+  }
+  if (S.geo) {
+    wideRow("Location", { v: geoText(S.geo) + "  (" + geoSource(S.geo) + ")", s: MUT });
+  }
+  rows.push([]);
+
+  var headRow = rows.length + 1;
+  rows.push([{ v: "Location", s: HD }, { v: "Part No", s: HD }, { v: "Description", s: HD },
+             { v: "Material", s: HD }, { v: "Size", s: HD }, { v: "Qty", s: HD },
+             { v: "Status", s: HD }, { v: "Requirement", s: HD }, { v: "Notes", s: HD }]);
+
+  if (!items.length) {
+    rows.push([{ v: "Nothing to order — every sign checked is in place.", s: MUT }]);
+  } else {
+    for (i = 0; i < items.length; i++) rows.push(items[i]);
+    rows.push([]);
+    rows.push([{ v: "Total units", s: B }, "", "", "", "", { v: totalUnits, s: NUMB }]);
+  }
+  if (S.note) {
+    rows.push([]);
+    rows.push([{ v: "Survey notes", s: B }, { v: S.note, s: MUT }]);
+  }
+
+  var lastData = headRow + (items.length || 1);
+  var heights = { 1: 30, 2: 16 };
+  heights[headRow] = 22;
+  var bytes = buildXlsx([{
+    name: "Order & actions",
+    rows: rows,
+    widths: [20, 14, 44, 12, 18, 6, 14, 30, 34],
+    opts: {
+      freeze: headRow,
+      filter: "A" + headRow + ":" + LAST + lastData,
+      merges: merges,
+      heights: heights
+    }
+  }]);
   shareOrSave(bytes, fileStem() + ".xlsx",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Spreadsheet");
 }
@@ -2671,7 +3384,9 @@ function buildPdf() {
   header();
 
   /* meta */
-  var meta = [["Site", S.site || "—"], ["Surveyor", S.by || "—"],
+  var siteLine = S.site || "—";
+  if (S.postcode) siteLine += ", " + S.postcode;
+  var meta = [["Site", siteLine], ["Surveyor", S.by || "—"],
               ["Date", S.date ? new Date(S.date + "T00:00:00").toLocaleDateString("en-GB",
                  { day: "numeric", month: "long", year: "numeric" }) : "—"]];
   var mx = d.mL, mw = CW / 3;
@@ -2684,6 +3399,16 @@ function buildPdf() {
     mx += mw;
   }
   d.y -= 42;
+
+  /* Where the survey was carried out — a captured fix is worth recording on a
+     document that may be read months later. */
+  if (S.addr || S.geo) {
+    var loc = [];
+    if (S.addr) loc.push(S.addr);
+    if (S.geo) loc.push(geoText(S.geo) + " (" + geoSource(S.geo) + ")");
+    d.text(loc.join("   ·   "), d.mL, d.y + 10, 8, false, "6B6B6B");
+    d.y -= 8;
+  }
 
   /* summary band — light fill, dark text, thin rule */
   d.rect(d.mL, d.y - 30, CW, 52, "F4F4F1");
@@ -2925,7 +3650,8 @@ function ic(name, size, cls) {
     alert:'<path d="M10.3 3.9 1.9 18a1.8 1.8 0 0 0 1.6 2.7h17a1.8 1.8 0 0 0 1.6-2.7L13.7 3.9a1.8 1.8 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
     copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     move:'<path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M17 8l4 4-4 4M7 8L3 12l4 4"/>',
-    dup:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/>'
+    dup:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/>',
+    pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>'
   }[name] || "";
   return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
     + 'stroke-linecap="round" stroke-linejoin="round" stroke-width="2" '
@@ -3059,6 +3785,12 @@ document.addEventListener("click", function (e) {
   }
   if (t.closest("#clearRef")) { pendingSign = null; pendingPhoto = null; renderRefNote(); return; }
   if (t.closest("#more")) { shown += LIMIT; renderResults(); return; }
+  if ((b = t.closest("[data-gtab]"))) {
+    GTAB = b.dataset.gtab;
+    renderGuide();
+    var gsc = $("#scroller"); if (gsc) gsc.scrollTop = 0;
+    return;
+  }
   if (t.closest("#gClr")) {
     GQ = ""; var gqi = $("#gq"); if (gqi) { gqi.value = ""; gqi.focus(); }
     var gc2 = $("#gClr"); if (gc2) gc2.hidden = true;
@@ -3108,6 +3840,25 @@ document.addEventListener("click", function (e) {
   }
   if (t.closest("#reset")) { askClear(); return; }
   if (t.closest("#btnSetup")) { openSetup(false); return; }
+  if (t.closest("#btnSurveys")) { openSurveys(); return; }
+  if (t.closest("#pcClear")) {
+    S.addr = ""; S.postcode = "";
+    if (S.geo && S.geo.from === "postcode") S.geo = null;
+    save();
+    var pcI = $("#f-pc"); if (pcI) pcI.value = "";
+    var pcL = $("#pcLine"); if (pcL) pcL.innerHTML = "";
+    var pcG = $("#geoLine"); if (pcG) pcG.innerHTML = geoLine();
+    return;
+  }
+  if (t.closest("#geoClear")) {
+    S.geo = null; save();
+    var gL = $("#geoLine"); if (gL) gL.innerHTML = "";
+    var gB = $("#geoGet"); if (gB) gB.innerHTML = ic("pin", 16) + "Capture location";
+    return;
+  }
+  if (t.closest("#newSurvey")) { startSurvey(); return; }
+  if ((b = t.closest("[data-opensurvey]"))) { switchSurvey(b.dataset.opensurvey); return; }
+  if ((b = t.closest("[data-delsurvey]"))) { confirmDeleteSurvey(b.dataset.delsurvey); return; }
   if (t.closest("#btnTheme")) { applyTheme(currentTheme() === "dark" ? "light" : "dark"); return; }
 
   function doComplete() {
@@ -3120,17 +3871,33 @@ var PICK_KIND = "size";
 var _openPicker = openPicker;
 openPicker = function (kind) { PICK_KIND = kind; _openPicker(kind); };
 
+/* Deletes the survey that's open. Any other saved survey is untouched — use
+   the Surveys sheet to remove those. */
 function askClear() {
   confirmSheet({
-    title: "Clear all survey data?",
-    body: "This wipes every area, product, photo and note from this device. "
-        + "It can't be undone" + (exported ? "." : " — and you haven't exported yet."),
-    yes: "Yes, clear everything", no: "No, go back", danger: true,
+    title: "Delete this survey?",
+    body: "Every area, product, photo and note in <b>" + esc(S.site || "this survey")
+        + "</b> is removed from this device. It can't be undone"
+        + (exported ? "." : " — and you haven't exported yet."),
+    yes: "Delete survey", no: "No, go back", danger: true,
     onYes: function () {
-      S = blank(); exported = true;
+      var gone = S.id;
+      savePending = false; clearTimeout(saveTimer);
       try { if (STORE) STORE.removeItem(KEY); } catch (e) {}
-      go("survey");
-      setTimeout(function () { openSetup(true); }, 260);
+      deleteSurvey(gone, function () {
+        listSurveys(function (rest) {
+          if (rest.length) {
+            readSurvey(rest[0].id, function (rec) {
+              if (rec) { adopt(rec); lastSavedAt = rec.updated || null; setCurrentId(S.id); }
+              exported = true; go("survey"); toast("Survey deleted");
+            });
+            return;
+          }
+          S = blank(); exported = true;
+          go("survey");
+          setTimeout(function () { openSetup(true); }, 260);
+        });
+      });
     }
   });
 }
@@ -3161,7 +3928,11 @@ document.addEventListener("input", function (e) {
   }
 });
 
+/* Only worth interrupting someone when closing the tab would actually lose
+   work. With IndexedDB behind us the survey is already on disk, so the prompt
+   is reserved for the fallback path where it genuinely isn't. */
 window.addEventListener("beforeunload", function (e) {
+  if (dbReady && !memOnly) return;
   var t = surveyStats();
   if ((t.signs || t.lines || t.photos) && !exported) { e.preventDefault(); e.returnValue = ""; return ""; }
 });
@@ -3204,9 +3975,14 @@ $("#logo").src = LOGO_SRC;
 try { $("#favicon").href = LOGO_SRC; $("#touchicon").href = LOGO_SRC; } catch (e) {}
 updateThemeIcon();
 setInterval(tickSaved, 15000);
-load();
-render();
-if (!S.seen) setTimeout(function () { openSetup(true); }, 380);
+/* Ask the browser not to evict this app's data when it's tidying up storage.
+   Granted silently on home-screen apps; a refusal changes nothing. */
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+bootLoad(function () {
+  render();
+  if (!S.seen) setTimeout(function () { openSetup(true); }, 380);
+  checkStorageRoom();
+});
 (function prefetch() {
   var idle = window.requestIdleCallback || function (f) { return setTimeout(f, 500); };
   idle(function () { try { ensureCatalogue(); } catch (e) {} });
