@@ -1,0 +1,17 @@
+{
+  "name": "spectrum-signage-survey",
+  "version": "1.0.0",
+  "private": true,
+  "description": "On-site signage compliance survey for Spectrum Industrial. The app itself is index.html — a single file with no build step. This package exists only to run the tests.",
+  "scripts": {
+    "test": "node tests/run.js",
+    "test:source": "node tests/source.js",
+    "test:regression": "node tests/regression.js",
+    "test:postcode": "node tests/postcode.js",
+    "test:signs": "node tests/signs.js",
+    "test:parts": "node tests/custom-part-link.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
