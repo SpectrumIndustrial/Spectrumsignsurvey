@@ -2511,13 +2511,28 @@ var GUIDE_CAT_DESC = {
    common practice rather than a legal minimum says so — a surveyor quoting
    this at a client needs to know which is which. */
 var GUIDE_MATERIALS = [
-  ["SAV", "Self-adhesive vinyl", "Cheapest and thinnest. Smooth, clean, dry indoor surfaces only — it will not hold on textured brick, dusty block, or anything cold and damp."],
-  ["RPVC", "Rigid PVC", "The general-purpose choice. Holds its shape, takes a screw or a bonding pad, fine indoors and in sheltered outdoor spots."],
-  ["FMX", "Foamex / foam PVC", "Light rigid board. Good for larger interior panels where a full rigid sheet would be heavy or expensive."],
-  ["ACM / ACP", "Aluminium composite", "For exposed exterior use and long life. Won't warp, curl or fade the way plastics do outdoors."],
-  ["PHO / PHS", "Photoluminescent", "Glows once the lights fail. Used on escape routes as a backup to emergency lighting — it only works if it has had light on it to charge."],
-  ["SSS / SSE", "Stainless steel", "Front-of-house, clean rooms and food areas, where the sign has to look right and be wiped down."],
-  ["MAG", "Magnetic", "Temporary. Goes on plant, vehicles and steel doors, and comes off again without a mark."]
+  ["PP", "Recyclable polypropylene", "1.2mm rigid board, and the single biggest material in the catalogue. The default for a wall-mounted sign indoors: light, holds its shape, screws or bonds, and recyclable at the end of its life."],
+  ["SAV", "Self-adhesive vinyl", "Peel and stick, no fixings. Smooth, clean, dry surfaces only — doors, stairwells, painted corridors. It will not hold on textured brick, dusty block, or anything cold and damp."],
+  ["SAPP", "Self-adhesive polypropylene", "The stick-on version of the PP board. Use it where you want the rigidity and print quality of a board but can't drill the wall."],
+  ["PVC / RPVC", "PVC board", "Rigid and hard-wearing. Takes a screw or a bonding pad, and copes with a sheltered outdoor position better than the plastics above."],
+  ["FMX", "Foamex, foam PVC", "Light rigid board. For larger interior panels — site notices, wall charts — where a solid sheet would be heavy and expensive."],
+  ["PHO / PHS", "Photoluminescent", "Glows once the lights fail, as a backup to emergency lighting on escape routes. PHO is the rigid board, PHS the flexible self-adhesive. It only works if it has had light on it to charge, so check the sign isn't in a cupboard that is normally dark."],
+  ["CRX", "Correx, fluted board", "Cheap, light and weatherproof enough for months rather than years. Site boards and temporary notices, typically 600 x 400mm and up."],
+  ["TAK", "Taktyle — raised text and braille", "Where the sign has to be readable by touch: WCs, lifts, room and floor identification. This is the accessibility range, not a like-for-like swap for a printed sign."],
+  ["FLR", "Floor graphics", "Anti-slip, for walking surfaces. Useful where people are looking down rather than up — PPE reminders at a threshold, route and keep-clear marking."],
+  ["ACP / ACM", "Aluminium composite", "Exterior and long life. Won't warp, curl or fade the way the plastics do outdoors — gates, yards, anything permanent and exposed."],
+  ["CHR / POL", "Chrome and polished effect", "Small front-of-house door signs — washrooms, no smoking, office identification — where the sign has to look right rather than shout."],
+  ["STN", "Stencil kits", "Letters and numbers for painting directly onto a floor or wall. For bay marking and lettering that has to survive traffic."]
+];
+
+/* Formats matter as much as material: a flat sign on a wall is invisible from
+   along a corridor, which is what the projecting and hanging ranges exist for. */
+var GUIDE_FORMATS = [
+  ["Flat wall sign", "The default. Read from in front of it, so fine at a door, a panel or the point of a hazard."],
+  ["Projecting sign", "Stands proud of the wall so it reads from along the corridor, not just face-on. The answer when a run of escape signs disappears as you walk the route."],
+  ["Double-sided hanging sign", "Hung from the ceiling, read from both directions. For open floors and warehouses where there is no wall to fix to."],
+  ["Floor graphic", "Where the eyeline is down — thresholds, pedestrian routes, keep-clear zones."],
+  ["Tactile / braille", "Read by touch at close range, mounted where a hand naturally finds it."]
 ];
 
 var GUIDE_SIZES = [
@@ -2638,11 +2653,25 @@ function guideSpecHtml() {
   var i, h = '<div class="sectionhead" style="margin-top:18px">'
     + '<span class="eyebrow">Choosing the material</span><span class="line"></span></div>'
     + '<div class="refblock"><p>The code in a part number tells you what the sign is made of. '
-    + 'Getting this wrong is the most common reason a sign has to be replaced early.</p>';
+    + 'Getting this wrong is the most common reason a sign has to be replaced early. '
+    + 'Listed commonest first, counted from the ' + esc(PRODUCT_COUNT) + ' products in this app.</p>';
   for (i = 0; i < GUIDE_MATERIALS.length; i++) {
     h += '<div class="matrow"><div class="matrow-head"><span class="pn">' + esc(GUIDE_MATERIALS[i][0])
        + '</span><b>' + esc(GUIDE_MATERIALS[i][1]) + '</b></div>'
        + '<p>' + esc(GUIDE_MATERIALS[i][2]) + '</p></div>';
+  }
+  h += '<p class="refnote">Spectrum\u2019s photoluminescent range is P.S.P.A. Class B, tested to '
+    + 'DIN 67510 parts 1\u20134, and rated to glow for 10+ hours from full charge. Worth quoting when a '
+    + 'customer asks what \u201cglow in the dark\u201d actually means \u2014 confirm the current spec against '
+    + 'the product page before putting it in writing.</p>';
+  h += '</div>';
+
+  h += '<div class="sectionhead"><span class="eyebrow">Which format</span><span class="line"></span></div>'
+    + '<div class="refblock"><p>The same sign comes in more than one shape. Picking the wrong one is '
+    + 'why a correctly specified escape sign still can\u2019t be seen from halfway down the corridor.</p>';
+  for (i = 0; i < GUIDE_FORMATS.length; i++) {
+    h += '<div class="matrow"><div class="matrow-head"><b>' + esc(GUIDE_FORMATS[i][0]) + '</b></div>'
+       + '<p>' + esc(GUIDE_FORMATS[i][1]) + '</p></div>';
   }
   h += '</div>';
 
