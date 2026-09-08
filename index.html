@@ -713,6 +713,21 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
   text-decoration:underline;white-space:nowrap}
 .metaline.busy svg{color:var(--ink-45)}
 
+/* ---- foldaway block in a sheet ---- */
+.moreblock{border-top:1px solid var(--rule);margin:2px 0 14px;padding-top:12px}
+.moreblock>summary{
+  list-style:none;cursor:pointer;font-size:13px;font-weight:650;color:var(--ink-70);
+  display:flex;align-items:center;gap:7px;padding:2px 0 10px;-webkit-tap-highlight-color:transparent
+}
+.moreblock>summary::-webkit-details-marker{display:none}
+.moreblock>summary::before{
+  content:"";width:7px;height:7px;flex:none;border-right:2px solid var(--ink-45);
+  border-bottom:2px solid var(--ink-45);transform:rotate(-45deg);margin-left:3px;
+  transition:transform .18s
+}
+.moreblock[open]>summary::before{transform:rotate(45deg)}
+.moreblock>summary:hover{color:var(--ink)}
+
 /* ---- guide sub-navigation ---- */
 .segmented{
   display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:3px;
@@ -962,7 +977,19 @@ function sheetXml(rows, colWidths, opts) {
     for (var mi = 0; mi < opts.merges.length; mi++) x += '<mergeCell ref="' + opts.merges[mi] + '"/>';
     x += "</mergeCells>";
   }
-  /* <drawing> is near the end of the CT_Worksheet sequence — after mergeCells. */
+  /* An internal link needs no relationship — the target goes in `location`,
+     and a sheet name containing a space or an ampersand has to be quoted. */
+  if (opts.links && opts.links.length) {
+    x += "<hyperlinks>";
+    for (var hi = 0; hi < opts.links.length; hi++) {
+      var lk = opts.links[hi];
+      x += '<hyperlink ref="' + lk.ref + '" location="' + xmlEsc(lk.loc) + '"'
+         + (lk.display ? ' display="' + xmlEsc(lk.display) + '"' : "")
+         + (lk.tip ? ' tooltip="' + xmlEsc(lk.tip) + '"' : "") + '/>';
+    }
+    x += "</hyperlinks>";
+  }
+  /* <drawing> is near the end of the CT_Worksheet sequence — after hyperlinks. */
   if (opts.hasDrawing) x += '<drawing r:id="rId1"/>';
   x += "</worksheet>";
   return x;
@@ -1019,13 +1046,13 @@ function drawingRels(media) {
 
 /* style indices: 0 normal, 1 title, 2 section, 3 header, 4 area, 5 bold, 6 muted,
    7 status OK, 8 status Missing, 9 status Damaged, 10 statutory tag, 11 advisory tag,
-   12 KPI figure (big bold), 13 number, 14 number bold.
+   12 KPI figure (big bold), 13 number, 14 number bold, 15 hyperlink.
    13/14 deliberately use General rather than the "@" text format the other
    styles carry — a quantity has to stay a number Excel will total. */
 var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
  + '<numFmts count="1"><numFmt numFmtId="164" formatCode="@"/></numFmts>'
- + '<fonts count="13">'
+ + '<fonts count="14">'
  +   '<font><sz val="11"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="16"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
@@ -1039,6 +1066,7 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<font><b/><sz val="9"/><color rgb="FFB8040F"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="9"/><color rgb="FF8A5300"/><name val="Calibri"/></font>'
  +   '<font><b/><sz val="20"/><color rgb="FF0D0D0D"/><name val="Calibri"/></font>'
+ +   '<font><u/><sz val="11"/><color rgb="FF0563C1"/><name val="Calibri"/></font>'
  + '</fonts>'
  + '<fills count="9">'
  +   '<fill><patternFill patternType="none"/></fill>'
@@ -1055,7 +1083,7 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<border><bottom style="thin"><color rgb="FFBFBFBF"/></bottom></border>'
  + '</borders>'
  + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
- + '<cellXfs count="15">'
+ + '<cellXfs count="16">'
  +   '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'
  +   '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  +   '<xf numFmtId="0" fontId="2" fillId="3" borderId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center"/></xf>'
@@ -1071,6 +1099,7 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  +   '<xf numFmtId="0" fontId="12" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>'
  +   '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>'
  +   '<xf numFmtId="0" fontId="5" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'
+ +   '<xf numFmtId="164" fontId="13" fillId="0" borderId="0" applyNumberFormat="1" applyFont="1" applyAlignment="1"><alignment vertical="top" horizontal="center"/></xf>'
  + '</cellXfs>'
  + '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
  + '</styleSheet>';
@@ -1553,6 +1582,7 @@ function newId() { return "s" + Date.now().toString(36) + Math.random().toString
 function blank() {
   return { id:newId(), created:Date.now(), updated:0,
            site:"", by:"", date:"", postcode:"", addr:"", addrAuto:false, geo:null,
+           contact:"", contactInfo:"", reseller:"", resContact:"", resInfo:"",
            seen:false, note:"", areas:[], active:null, seq:1 };
 }
 var S = blank(), exported = false, memOnly = false;
@@ -2230,11 +2260,17 @@ function renderRefNote() {
   var a = area(), name = "";
   if (a && pendingSign) for (var i = 0; i < a.signs.length; i++) if (a.signs[i].id === pendingSign) name = a.signs[i].name;
   if (a && pendingPhoto) {
-    for (var k = 0; k < a.photos.length; k++) if (a.photos[k].id === pendingPhoto) name = "Photo " + (k + 1);
+    var ph = photoById(a, pendingPhoto);
+    if (ph) name = photoRef(a, ph) + " · this photo";
   }
+  /* The custom-item button also sits at the foot of the results, but that is
+     below two dozen products. When something is waiting to be matched, the
+     answer is often "it isn't in the catalogue" — so offer it here too. */
   el.innerHTML = name
     ? '<div class="refbar">' + ic("link", 14) + 'For: <b>' + esc(name) + '</b>'
-      + '<button id="clearRef">Cancel</button></div>' : "";
+      + '<button id="clearRef">Cancel</button></div>'
+      + '<button class="btn btn-ghost btn-block" id="addCustom" style="margin:0 0 12px">'
+      + ic("plus", 15) + 'Not in the catalogue? Add a custom item</button>' : "";
 }
 function renderResults() {
   var res = matches(shown), h = "", i;
@@ -2803,6 +2839,16 @@ function openSetup(first) {
     +   '<button class="btn btn-ghost btn-block" id="geoGet" type="button">'
     +   ic("pin", 16) + (S.geo ? "Update location" : "Capture location") + '</button></div>'
     + '<div id="geoLine">' + geoLine() + '</div>'
+    /* Folded away by default: the office needs these on the quote, but the
+       surveyor shouldn't have to scroll past five optional boxes to start. */
+    + '<details class="moreblock"' + (anyContact() ? " open" : "") + '>'
+    +   '<summary>Customer &amp; reseller details</summary>'
+    +   fld("contact", "End customer contact", S.contact, "Name")
+    +   fld("contactInfo", "Their contact details", S.contactInfo, "Phone or email")
+    +   fld("reseller", "Re-seller", S.reseller, "e.g. Arco")
+    +   fld("resContact", "Re-seller contact", S.resContact, "Name")
+    +   fld("resInfo", "Their contact details", S.resInfo, "Phone or email")
+    + '</details>'
     + '<button class="btn btn-primary btn-block" id="saveSetup">' + (first ? "Start survey" : "Save") + '</button>'
     + (first ? "" : '<button class="btn btn-ghost btn-block danger" id="wipe" style="margin-top:8px">'
         + ic("bin", 16) + 'Delete this survey</button>'));
@@ -2828,6 +2874,11 @@ function openSetup(first) {
     S.date = $("#f-date").value;
     S.postcode = $("#f-pc").value.trim().toUpperCase();
     S.addr = $("#f-addr").value.trim();
+    var extra = ["contact", "contactInfo", "reseller", "resContact", "resInfo"];
+    for (var xi = 0; xi < extra.length; xi++) {
+      var xe = $("#f-" + extra[xi]);
+      if (xe) S[extra[xi]] = xe.value.trim();
+    }
     S.seen = true;
     save(); closeSheet(); render();
   });
@@ -2842,6 +2893,12 @@ function geoLine(msg, busy) {
   return '<div class="metaline">' + ic("check", 13)
     + '<span>' + esc(geoText(S.geo)) + '  ·  ' + esc(geoSource(S.geo)) + '</span>'
     + '<button type="button" id="geoClear">Clear</button></div>';
+}
+function anyContact() {
+  return !!(S.contact || S.contactInfo || S.reseller || S.resContact || S.resInfo);
+}
+function contactLine(name, info) {
+  return [name, info].filter(Boolean).join("  ·  ");
 }
 function geoText(g) {
   if (!g) return "";
@@ -3336,7 +3393,7 @@ function exportXlsx() {
 function buildWorkbook(photos) {
   var W = 0, T = 1, SEC = 2, HD = 3, AREA = 4, B = 5, MUT = 6,
       ST_OK = 7, ST_MISS = 8, ST_DAM = 9, TAG_STAT = 10, TAG_ADV = 11, KPI = 12,
-      NUM = 13, NUMB = 14;
+      NUM = 13, NUMB = 14, LINK = 15;
   function statusStyle(st) {
     return st === "OK" ? ST_OK : st === "Missing" ? ST_MISS : st === "Damaged" ? ST_DAM : 0;
   }
@@ -3351,12 +3408,14 @@ function buildWorkbook(photos) {
      signs already in place, signs ruled out as not applicable, and signs the
      surveyor hasn't reached yet. The counts are carried in the header instead,
      and the PDF remains the full survey record. */
-  var items = [], i, j, k;
+  var items = [], itemRefs = [], i, j, k;
   function push(o) {
     items.push([o.loc, o.pn, o.desc, o.mat, o.size,
                 { v: o.qty, s: NUM },
                 { v: o.status, s: statusStyle(o.rawStatus) },
-                o.req, o.note]);
+                o.req, o.note,
+                o.photoRef ? { v: o.photoRef, s: LINK } : ""]);
+    itemRefs.push(o.photoRef || "");
   }
   function ref(bits) { return bits.filter(Boolean).join(" · "); }
   var settled = 0, unchecked = 0, totalUnits = 0;
@@ -3401,13 +3460,13 @@ function buildWorkbook(photos) {
       if (!pp) continue;
       push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
              qty: 1, status: "For supply", rawStatus: "", req: "—",
-             note: ref([photoRef(a, a.photos[k]), a.photos[k].note]) });
+             note: a.photos[k].note || "", photoRef: photoRef(a, a.photos[k]) });
       totalUnits += 1;
     }
   }
 
   /* ---- lay the sheet out ---- */
-  var COLS = 9, LAST = colName(COLS);
+  var COLS = 10, LAST = colName(COLS);
   var t = surveyStats(), rows = [];
   rows.push([{ v: "SIGNAGE SURVEY — ORDER & ACTION LIST", s: T }]);
   rows.push([{ v: "Spectrum Industrial · part of Centurion Europe", s: MUT }]);
@@ -3418,7 +3477,7 @@ function buildWorkbook(photos) {
      wrap over four lines and the whole block looked broken. */
   var merges = ["A1:" + LAST + "1", "A2:" + LAST + "2"];
   function metaRow(l1, v1, l2, v2) {
-    var r = [{ v: l1, s: B }, v1, "", "", { v: l2 || "", s: B }, v2 || "", "", "", ""];
+    var r = [{ v: l1, s: B }, v1, "", "", { v: l2 || "", s: B }, v2 || "", "", "", "", ""];
     var n = rows.length + 1;
     merges.push("B" + n + ":D" + n);
     if (l2) merges.push("F" + n + ":" + LAST + n);
@@ -3427,7 +3486,7 @@ function buildWorkbook(photos) {
   function wideRow(label, value) {
     var n = rows.length + 1;
     merges.push("B" + n + ":" + LAST + n);
-    rows.push([{ v: label, s: B }, value, "", "", "", "", "", "", ""]);
+    rows.push([{ v: label, s: B }, value, "", "", "", "", "", "", "", ""]);
   }
 
   var siteBits = [S.site || "—"];
@@ -3435,6 +3494,10 @@ function buildWorkbook(photos) {
   if (S.postcode) siteBits.push(S.postcode);
   metaRow("Site", siteBits.join(", "), "Surveyor", S.by || "—");
   metaRow("Date", ukDate(S.date), "Statutory", t.pct === null ? "—" : t.pct + "% of those checked in place");
+  if (S.contact || S.contactInfo) metaRow("End customer", contactLine(S.contact, S.contactInfo), "", "");
+  if (S.reseller || S.resContact || S.resInfo) {
+    metaRow("Re-seller", contactLine(S.reseller, contactLine(S.resContact, S.resInfo)), "", "");
+  }
   wideRow("This list", items.length + (items.length === 1 ? " line" : " lines")
     + " · " + totalUnits + (totalUnits === 1 ? " unit" : " units"));
   var caveats = [];
@@ -3451,7 +3514,8 @@ function buildWorkbook(photos) {
   var headRow = rows.length + 1;
   rows.push([{ v: "Location", s: HD }, { v: "Part No", s: HD }, { v: "Description", s: HD },
              { v: "Material", s: HD }, { v: "Size", s: HD }, { v: "Qty", s: HD },
-             { v: "Status", s: HD }, { v: "Requirement", s: HD }, { v: "Notes", s: HD }]);
+             { v: "Status", s: HD }, { v: "Requirement", s: HD }, { v: "Notes", s: HD },
+             { v: "Photo", s: HD }]);
 
   if (!items.length) {
     rows.push([{ v: "Nothing to order — every sign checked is in place.", s: MUT }]);
@@ -3471,7 +3535,7 @@ function buildWorkbook(photos) {
   var book = [{
     name: "Order & actions",
     rows: rows,
-    widths: [20, 14, 44, 12, 18, 6, 14, 30, 34],
+    widths: [20, 14, 44, 12, 18, 6, 14, 30, 34, 9],
     opts: {
       freeze: headRow,
       filter: "A" + headRow + ":" + LAST + lastData,
@@ -3494,17 +3558,21 @@ function buildWorkbook(photos) {
 
     prows.push([{ v: "SITE PHOTOS", s: T }]);
     prows.push([{ v: (S.site || "—") + "  ·  " + ukDate(S.date)
-      + "  ·  references match the Notes column on the order list", s: MUT }]);
-    prows.push([]);
+      + "  ·  references match the Photo column on the order list", s: MUT }]);
+    /* A way back, so the two sheets are a round trip rather than a hunt. */
+    prows.push([{ v: "‹ Back to the order list", s: LINK }]);
+    var plinks = [{ ref: "A3", loc: "'Order & actions'!A1", display: "‹ Back to the order list" }];
     var pHead = prows.length + 1;
     prows.push([{ v: "Ref", s: HD }, { v: "Location", s: HD }, { v: "Photo", s: HD },
                 { v: "What it shows", s: HD }, { v: "Part identified", s: HD }]);
     pheights[1] = 30; pheights[2] = 16; pheights[pHead] = 22;
 
+    var photoRowOf = {};
     for (r = 0; r < photos.length; r++) {
       p = photos[r];
       var part = p.e.ph.part;
       var rowNum = prows.length + 1;                 /* 1-based; drawing anchors are 0-based */
+      photoRowOf[p.e.ref] = rowNum;
       prows.push([
         { v: p.e.ref, s: B },
         p.e.area.name,
@@ -3529,9 +3597,19 @@ function buildWorkbook(photos) {
       name: "Photos",
       rows: prows,
       widths: [7, 22, Math.round((IMG_W + PAD * 2) / 7) + 1, 46, 38],
-      opts: { freeze: pHead, merges: ["A1:E1", "A2:E2"], heights: pheights },
+      opts: { freeze: pHead, merges: ["A1:E1", "A2:E2"], heights: pheights, links: plinks },
       images: pimgs
     });
+
+    /* Now the photo rows are known, point the order list's Photo column at
+       them. Clicking P4 on the first sheet lands on P4's picture. */
+    var links = [];
+    for (r = 0; r < itemRefs.length; r++) {
+      if (!itemRefs[r] || !photoRowOf[itemRefs[r]]) continue;
+      links.push({ ref: LAST + (headRow + 1 + r), loc: "Photos!A" + photoRowOf[itemRefs[r]],
+                   display: itemRefs[r], tip: "Go to " + itemRefs[r] + " on the Photos sheet" });
+    }
+    if (links.length) book[0].opts.links = links;
   }
 
   var bytes = buildXlsx(book, media);
@@ -3649,6 +3727,15 @@ function buildPdf() {
     if (S.addr) loc.push(S.addr);
     if (S.geo) loc.push(geoText(S.geo) + " (" + geoSource(S.geo) + ")");
     d.text(loc.join("   ·   "), d.mL, d.y + 10, 8, false, "6B6B6B");
+    d.y -= 8;
+  }
+  if (anyContact()) {
+    var cl = [];
+    if (S.contact || S.contactInfo) cl.push("Customer: " + contactLine(S.contact, S.contactInfo));
+    if (S.reseller || S.resContact || S.resInfo) {
+      cl.push("Re-seller: " + contactLine(S.reseller, contactLine(S.resContact, S.resInfo)));
+    }
+    d.text(cl.join("   ·   "), d.mL, d.y + 10, 8, false, "6B6B6B");
     d.y -= 8;
   }
 
