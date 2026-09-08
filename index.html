@@ -917,7 +917,8 @@ function colName(n) {                      // 1 -> A
 function sheetXml(rows, colWidths, opts) {
   opts = opts || {};
   var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
+    + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
   if (opts.freeze) {
     var tl = "A" + (opts.freeze + 1);
     x += '<sheetViews><sheetView workbookViewId="0">'
@@ -961,8 +962,59 @@ function sheetXml(rows, colWidths, opts) {
     for (var mi = 0; mi < opts.merges.length; mi++) x += '<mergeCell ref="' + opts.merges[mi] + '"/>';
     x += "</mergeCells>";
   }
+  /* <drawing> is near the end of the CT_Worksheet sequence — after mergeCells. */
+  if (opts.hasDrawing) x += '<drawing r:id="rId1"/>';
   x += "</worksheet>";
   return x;
+}
+
+/* ---- pictures ----
+   A spreadsheet drawing is a separate part: the image bytes live in xl/media,
+   an anchor list in xl/drawings, and the sheet points at the drawing through
+   its own rels file. Sizes are in EMU — 914400 to the inch, so 9525 per pixel
+   at 96dpi. */
+var EMU_PX = 9525;
+function drawingXml(images) {
+  var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"'
+    + ' xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">';
+  for (var i = 0; i < images.length; i++) {
+    var im = images[i];
+    var cx = Math.round(im.wpx * EMU_PX), cy = Math.round(im.hpx * EMU_PX);
+    var offX = Math.round((im.offX || 0) * EMU_PX), offY = Math.round((im.offY || 0) * EMU_PX);
+    x += '<xdr:oneCellAnchor>'
+       +   '<xdr:from><xdr:col>' + im.col + '</xdr:col><xdr:colOff>' + offX + '</xdr:colOff>'
+       +   '<xdr:row>' + im.row + '</xdr:row><xdr:rowOff>' + offY + '</xdr:rowOff></xdr:from>'
+       +   '<xdr:ext cx="' + cx + '" cy="' + cy + '"/>'
+       +   '<xdr:pic>'
+       +     '<xdr:nvPicPr>'
+       +       '<xdr:cNvPr id="' + (i + 2) + '" name="' + xmlEsc(im.name || ("Picture " + (i + 1))) + '"'
+       +         (im.alt ? ' descr="' + xmlEsc(im.alt) + '"' : "") + '/>'
+       +       '<xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr>'
+       +     '</xdr:nvPicPr>'
+       +     '<xdr:blipFill>'
+       +       '<a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+       +         ' r:embed="rId' + (im.m + 1) + '"/>'
+       +       '<a:stretch><a:fillRect/></a:stretch>'
+       +     '</xdr:blipFill>'
+       +     '<xdr:spPr>'
+       +       '<a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm>'
+       +       '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>'
+       +     '</xdr:spPr>'
+       +   '</xdr:pic>'
+       +   '<xdr:clientData/>'
+       + '</xdr:oneCellAnchor>';
+  }
+  return x + "</xdr:wsDr>";
+}
+function drawingRels(media) {
+  var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+  for (var i = 0; i < media.length; i++) {
+    x += '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/'
+       + 'officeDocument/2006/relationships/image" Target="../media/' + media[i].name + '"/>';
+  }
+  return x + "</Relationships>";
 }
 
 /* style indices: 0 normal, 1 title, 2 section, 3 header, 4 area, 5 bold, 6 muted,
@@ -1024,8 +1076,14 @@ var STYLES_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
  + '</styleSheet>';
 
 /* sheets: [{name, rows, widths}] */
-function buildXlsx(sheets) {
+/* sheets: [{name, rows, widths, opts, images}]
+   media:  [{name:"image1.jpeg", data:Uint8Array}] — shared, so the same photo
+   referenced from two sheets is stored once. */
+function buildXlsx(sheets, media) {
+  media = media || [];
   var files = [], i;
+  var withPics = [];
+  for (i = 0; i < sheets.length; i++) if (sheets[i].images && sheets[i].images.length) withPics.push(i);
   var ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
     + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -1034,6 +1092,11 @@ function buildXlsx(sheets) {
     + '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
   for (i = 0; i < sheets.length; i++) {
     ct += '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+  }
+  if (media.length) ct += '<Default Extension="jpeg" ContentType="image/jpeg"/>';
+  for (i = 0; i < withPics.length; i++) {
+    ct += '<Override PartName="/xl/drawings/drawing' + (withPics[i] + 1) + '.xml" '
+        + 'ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
   }
   ct += "</Types>";
 
@@ -1068,8 +1131,26 @@ function buildXlsx(sheets) {
   files.push({ name: "xl/_rels/workbook.xml.rels", data: utf8(wbRels) });
   files.push({ name: "xl/styles.xml", data: utf8(STYLES_XML) });
   for (i = 0; i < sheets.length; i++) {
+    var sopts = sheets[i].opts || {}, pics = sheets[i].images || [];
+    if (pics.length) {
+      /* Copy so the caller's options object isn't mutated between exports. */
+      var o2 = {}; for (var k in sopts) if (Object.prototype.hasOwnProperty.call(sopts, k)) o2[k] = sopts[k];
+      o2.hasDrawing = true;
+      sopts = o2;
+      files.push({ name: "xl/drawings/drawing" + (i + 1) + ".xml", data: utf8(drawingXml(pics)) });
+      files.push({ name: "xl/drawings/_rels/drawing" + (i + 1) + ".xml.rels", data: utf8(drawingRels(media)) });
+      files.push({ name: "xl/worksheets/_rels/sheet" + (i + 1) + ".xml.rels",
+                   data: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                     + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                     + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/'
+                     + '2006/relationships/drawing" Target="../drawings/drawing' + (i + 1) + '.xml"/>'
+                     + '</Relationships>') });
+    }
     files.push({ name: "xl/worksheets/sheet" + (i + 1) + ".xml",
-                 data: utf8(sheetXml(sheets[i].rows, sheets[i].widths, sheets[i].opts)) });
+                 data: utf8(sheetXml(sheets[i].rows, sheets[i].widths, sopts)) });
+  }
+  for (i = 0; i < media.length; i++) {
+    files.push({ name: "xl/media/" + media[i].name, data: media[i].data });
   }
   return zipStore(files);
 }
@@ -3189,7 +3270,70 @@ function dl(blob, name) {
   setTimeout(function () { a.remove(); }, 800);   /* URL deliberately not revoked */
 }
 
+/* Every photo in the survey, in survey order, with one reference used by both
+   documents. Numbering per area gave two different photos the same "Photo 1",
+   which is no use as a cross-reference on a flat list. */
+function photoIndex() {
+  var out = [], n = 0, i, j;
+  for (i = 0; i < S.areas.length; i++) {
+    for (j = 0; j < S.areas[i].photos.length; j++) {
+      n++;
+      out.push({ ph: S.areas[i].photos[j], area: S.areas[i], n: n, ref: "P" + n });
+    }
+  }
+  return out;
+}
+function photoRef(areaObj, photoObj) {
+  var idx = photoIndex();
+  for (var i = 0; i < idx.length; i++) if (idx[i].ph === photoObj) return idx[i].ref;
+  return "";
+}
+
+/* Photos re-encoded for the spreadsheet. The office reads these on a monitor
+   rather than printing them, so 640px at a lower quality is plenty and keeps
+   the workbook emailable — about 51KB a photo against 113KB in the PDF, which
+   stays at full quality. Done one at a time: decoding forty full-size images
+   at once is how you get a tab crash on a phone. */
+var XLSX_IMG_MAX = 640, XLSX_IMG_Q = 0.72;
+function preparePhotos(list, progress, done) {
+  var out = [], i = 0;
+  function next() {
+    if (i >= list.length) return done(out);
+    if (progress && (i % 4 === 0)) progress(i, list.length);
+    var entry = list[i], img = new Image();
+    img.onload = function () {
+      var max = XLSX_IMG_MAX, w = img.width, h = img.height;
+      if (w > max || h > max) { var r = Math.min(max / w, max / h); w = Math.round(w * r); h = Math.round(h * r); }
+      var cv = document.createElement("canvas");
+      cv.width = w; cv.height = h;
+      var cx = cv.getContext("2d");
+      cx.imageSmoothingEnabled = true;
+      if ("imageSmoothingQuality" in cx) cx.imageSmoothingQuality = "high";
+      cx.drawImage(img, 0, 0, w, h);
+      var url = "";
+      try { url = cv.toDataURL("image/jpeg", XLSX_IMG_Q); } catch (e) { url = ""; }
+      out.push({ e: entry, ok: isJpegDataUrl(url), url: url, w: w, h: h });
+      i++; setTimeout(next, 0);
+    };
+    img.onerror = function () { out.push({ e: entry, ok: false }); i++; setTimeout(next, 0); };
+    img.src = entry.ph.src;
+  }
+  next();
+}
+
 function exportXlsx() {
+  var idx = photoIndex();
+  if (!idx.length) return buildWorkbook([]);
+  toast("Preparing " + idx.length + " photo" + (idx.length === 1 ? "" : "s") + " for the spreadsheet…");
+  preparePhotos(idx, function (i, n) {
+    toast("Preparing photos… " + i + " of " + n);
+  }, function (ready) {
+    try { buildWorkbook(ready); }
+    catch (e) { toast("Couldn't build the spreadsheet", true); }
+  });
+}
+
+function buildWorkbook(photos) {
   var W = 0, T = 1, SEC = 2, HD = 3, AREA = 4, B = 5, MUT = 6,
       ST_OK = 7, ST_MISS = 8, ST_DAM = 9, TAG_STAT = 10, TAG_ADV = 11, KPI = 12,
       NUM = 13, NUMB = 14;
@@ -3257,7 +3401,7 @@ function exportXlsx() {
       if (!pp) continue;
       push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
              qty: 1, status: "For supply", rawStatus: "", req: "—",
-             note: ref(["Photo " + (k + 1), a.photos[k].note]) });
+             note: ref([photoRef(a, a.photos[k]), a.photos[k].note]) });
       totalUnits += 1;
     }
   }
@@ -3324,7 +3468,7 @@ function exportXlsx() {
   var lastData = headRow + (items.length || 1);
   var heights = { 1: 30, 2: 16 };
   heights[headRow] = 22;
-  var bytes = buildXlsx([{
+  var book = [{
     name: "Order & actions",
     rows: rows,
     widths: [20, 14, 44, 12, 18, 6, 14, 30, 34],
@@ -3334,7 +3478,63 @@ function exportXlsx() {
       merges: merges,
       heights: heights
     }
-  }]);
+  }];
+
+  /* ---- Photos sheet ----
+     The office quotes from this workbook, and having to open the PDF
+     alongside it just to see a picture was the whole complaint. Every photo
+     goes in, on its own row, labelled with the same reference the action list
+     uses in its Notes column. */
+  var media = [];
+  if (photos && photos.length) {
+    /* Bounded on both axes: a fixed height keeps the rows aligned, and a
+       tighter width stops portrait shots leaving half the column empty. */
+    var IMG_W = 260, IMG_H = 200, PAD = 6;
+    var prows = [], pimgs = [], pheights = {}, p, disp, scale, r;
+
+    prows.push([{ v: "SITE PHOTOS", s: T }]);
+    prows.push([{ v: (S.site || "—") + "  ·  " + ukDate(S.date)
+      + "  ·  references match the Notes column on the order list", s: MUT }]);
+    prows.push([]);
+    var pHead = prows.length + 1;
+    prows.push([{ v: "Ref", s: HD }, { v: "Location", s: HD }, { v: "Photo", s: HD },
+                { v: "What it shows", s: HD }, { v: "Part identified", s: HD }]);
+    pheights[1] = 30; pheights[2] = 16; pheights[pHead] = 22;
+
+    for (r = 0; r < photos.length; r++) {
+      p = photos[r];
+      var part = p.e.ph.part;
+      var rowNum = prows.length + 1;                 /* 1-based; drawing anchors are 0-based */
+      prows.push([
+        { v: p.e.ref, s: B },
+        p.e.area.name,
+        "",                                          /* the picture sits over this cell */
+        p.e.ph.note || (p.ok ? "" : "Image unavailable"),
+        part ? partLabel(part) : ""
+      ]);
+      if (p.ok) {
+        scale = Math.min(IMG_W / p.w, IMG_H / p.h);
+        disp = { w: Math.round(p.w * scale), h: Math.round(p.h * scale) };
+        media.push({ name: "image" + media.length + ".jpeg", data: jpegFromDataUrl(p.url).data });
+        pimgs.push({ m: media.length - 1, col: 2, row: rowNum - 1,
+                     offX: PAD, offY: PAD, wpx: disp.w, hpx: disp.h,
+                     name: p.e.ref, alt: p.e.ph.note || p.e.ref });
+        pheights[rowNum] = Math.round((disp.h + PAD * 2) * 0.75);   /* px -> points */
+      } else {
+        pheights[rowNum] = 18;
+      }
+    }
+
+    book.push({
+      name: "Photos",
+      rows: prows,
+      widths: [7, 22, Math.round((IMG_W + PAD * 2) / 7) + 1, 46, 38],
+      opts: { freeze: pHead, merges: ["A1:E1", "A2:E2"], heights: pheights },
+      images: pimgs
+    });
+  }
+
+  var bytes = buildXlsx(book, media);
   shareOrSave(bytes, fileStem() + ".xlsx",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Spreadsheet");
 }
@@ -3579,7 +3779,10 @@ function buildPdf() {
           d.text(partLine, px, capY, 6.8, true, "1A1A1A");
           capY -= 9;
         }
-        var cap = wrapText((phi + 1) + ". " + (a.photos[phi].note || "No description"), 6.8, false, pw);
+        /* Same reference the spreadsheet uses, so the two documents can be
+           read side by side without translating between them. */
+        var cap = wrapText(photoRef(a, a.photos[phi]) + "  "
+          + (a.photos[phi].note || "No description"), 6.8, false, pw);
         for (var ci = 0; ci < Math.min(2, cap.length); ci++) {
           d.text(cap[ci], px, capY - ci * 8, 6.8, false, "6B6B6B");
         }
