@@ -734,7 +734,8 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
   background:var(--rule-2);border-radius:11px;margin:14px 0 4px
 }
 .segmented button{
-  padding:9px 6px;border-radius:8px;font-size:13px;font-weight:640;color:var(--ink-45);
+  padding:9px 4px;border-radius:8px;font-size:12.5px;font-weight:640;color:var(--ink-45);
+  white-space:nowrap;
   transition:background .14s,color .14s
 }
 .segmented button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
@@ -2494,35 +2495,37 @@ function renderReport() {
 }
 
 /* ================= GUIDE ================= */
-/* Reference material built entirely from TPL/CATNAME — the same data that
-   drives "Add a sign" — so it can never drift out of sync with what the
-   survey actually checks against. */
+/* ---------------------------------------------------------------
+   Reference content below follows Spectrum's own published guidance —
+   "How to choose the right safety sign", "What safety signs mean",
+   "Are your safety symbols up to date?" and the Safety Signage Self Audit
+   Tool — rather than generic advice. Where something is common practice
+   rather than a legal minimum it says so.
+   --------------------------------------------------------------- */
 var GUIDE_CAT_DESC = {
-  P: "Red circle with a diagonal bar. An action that must not be carried out.",
-  M: "Blue circle. An action that must be carried out — PPE, most often.",
-  W: "Yellow triangle, black border. A hazard to be aware of close by.",
-  S: "Green rectangle. The safe route, an exit, or first-aid provision.",
-  F: "Red rectangle. Marks the location of fire-fighting equipment.",
+  P: "Red circular band with a white border and a diagonal red bar. The black symbol sits behind the bar. Fix on or next to the thing being forbidden, or at the entry to the area.",
+  M: "Blue circle, white symbol, white border. Fix on or very near the equipment, or at the point of entry to the area the message applies to.",
+  W: "Yellow triangle, black border and symbol, with a white border around the triangle. Use where a hazard cannot be controlled by any other means.",
+  S: "Green rectangle or square, white border, white symbol and text. Place so someone in need can locate and identify the equipment or route quickly.",
+  F: "Red rectangle or square, white border, white symbol. Location and identification of fire-fighting equipment — alarms, dry risers, extinguisher type.",
   N: "Required by law, but without a standard pictogram or colour."
 };
 
-/* Reference content below is written against the regulations and standards
-   themselves, not copied from any supplier's catalogue. Anything that is
-   common practice rather than a legal minimum says so — a surveyor quoting
-   this at a client needs to know which is which. */
+/* Spectrum's own material notes, ordered by how much of the catalogue each
+   one actually accounts for — counted from the product data in this app. */
 var GUIDE_MATERIALS = [
-  ["PP", "Recyclable polypropylene", "1.2mm rigid board, and the single biggest material in the catalogue. The default for a wall-mounted sign indoors: light, holds its shape, screws or bonds, and recyclable at the end of its life."],
-  ["SAV", "Self-adhesive vinyl", "Peel and stick, no fixings. Smooth, clean, dry surfaces only — doors, stairwells, painted corridors. It will not hold on textured brick, dusty block, or anything cold and damp."],
-  ["SAPP", "Self-adhesive polypropylene", "The stick-on version of the PP board. Use it where you want the rigidity and print quality of a board but can't drill the wall."],
-  ["PVC / RPVC", "PVC board", "Rigid and hard-wearing. Takes a screw or a bonding pad, and copes with a sheltered outdoor position better than the plastics above."],
-  ["FMX", "Foamex, foam PVC", "Light rigid board. For larger interior panels — site notices, wall charts — where a solid sheet would be heavy and expensive."],
-  ["PHO / PHS", "Photoluminescent", "Glows once the lights fail, as a backup to emergency lighting on escape routes. PHO is the rigid board, PHS the flexible self-adhesive. It only works if it has had light on it to charge, so check the sign isn't in a cupboard that is normally dark."],
+  ["PP", "Polypropylene", "Fully recyclable plastic, suitable for both internal and external use. Available without adhesive. The single biggest material in the catalogue."],
+  ["SAV", "Self-adhesive vinyl", "Thin and flexible, ideal for indoor use and in low-traffic areas. Applies to clean, smooth surfaces — not textured brick, dusty block, or anything cold and damp."],
+  ["SAPP", "Self-adhesive polypropylene", "The stick-on version of the PP board, for where you want the board without drilling."],
+  ["PVC / RPVC", "Rigid PVC", "Available with or without adhesive. Durable, strong and weather resistant — a good option outdoors or indoors."],
+  ["FMX", "Foamed PVC board", "A versatile, lightweight rigid PVC foam sheet. Durable, with low water absorption, so it suits indoor and outdoor use."],
+  ["PHO / PHS", "Photoluminescent", "Glows in dark or low-light areas in the event of a power failure or fire. Often specified for fire exit signs so the escape route stays visible. It only works if it has had light on it to charge."],
   ["CRX", "Correx, fluted board", "Cheap, light and weatherproof enough for months rather than years. Site boards and temporary notices, typically 600 x 400mm and up."],
-  ["TAK", "Taktyle — raised text and braille", "Where the sign has to be readable by touch: WCs, lifts, room and floor identification. This is the accessibility range, not a like-for-like swap for a printed sign."],
-  ["FLR", "Floor graphics", "Anti-slip, for walking surfaces. Useful where people are looking down rather than up — PPE reminders at a threshold, route and keep-clear marking."],
-  ["ACP / ACM", "Aluminium composite", "Exterior and long life. Won't warp, curl or fade the way the plastics do outdoors — gates, yards, anything permanent and exposed."],
-  ["CHR / POL", "Chrome and polished effect", "Small front-of-house door signs — washrooms, no smoking, office identification — where the sign has to look right rather than shout."],
-  ["STN", "Stencil kits", "Letters and numbers for painting directly onto a floor or wall. For bay marking and lettering that has to survive traffic."]
+  ["TAK", "Taktyle — raised text and braille", "Read by touch: WCs, lifts, room and floor identification. The accessibility range, not a like-for-like swap for a printed sign."],
+  ["FLR", "Laminated floor vinyl", "Permanent floor graphics with a hard-wearing laminate face, rated R9 for anti-slip. For dry, indoor, sealed surfaces only."],
+  ["ACP / ACM", "Aluminium composite", "Strong and lightweight, suited to long-term outdoor use. Resists inclement weather — the material used for road signs."],
+  ["CHR / POL", "Chrome and polished effect", "Small front-of-house door signs — washrooms, no smoking, office identification."],
+  ["STN", "Stencil", "Specially modified flexible polyester, laser cut for accuracy. Can be reused multiple times — for painting bay markings and floor text directly."]
 ];
 
 /* Formats matter as much as material: a flat sign on a wall is invisible from
@@ -2535,25 +2538,122 @@ var GUIDE_FORMATS = [
   ["Tactile / braille", "Read by touch at close range, mounted where a hand naturally finds it."]
 ];
 
+/* Character height against the distance it can be read from — Spectrum's
+   suggested maximum viewing distances. */
 var GUIDE_SIZES = [
-  ["Up to 10 m", "100 mm", "100 mm"],
-  ["Up to 15 m", "150 mm", "150 mm"],
-  ["Up to 20 m", "200 mm", "200 mm"],
-  ["Up to 30 m", "300 mm", "300 mm"],
-  ["Up to 40 m", "400 mm", "400 mm"]
+  ["30 mm", "8 m"], ["40 mm", "10 m"], ["60 mm", "15 m"], ["95 mm", "24 m"],
+  ["130 mm", "32 m"], ["250 mm", "63 m"], ["315 mm", "79 m"],
+  ["380 mm", "95 m"], ["500 mm", "126 m"]
+];
+var GUIDE_DISTANCE_USE = [
+  ["17 m", "Small offices, small shops and factories"],
+  ["22 m", "Large offices, large factories, warehouses and shopping centres"],
+  ["30 m", "Large warehouses, distribution centres and exhibition halls"]
+];
+
+/* Spectrum's installation recommendations. */
+var GUIDE_INSTALL = [
+  "Install in a well-lit, easily accessible and visible location.",
+  "Where light levels are poor, the sign should incorporate artificial lighting, or reflective or photoluminescent material as appropriate.",
+  "Install in the line of sight, not obscured by doors, racks or other objects.",
+  "Never fix to a movable object, or next to one — a door or window that hides the sign when it moves.",
+  "Safety and fire equipment signs must be clearly visible in the immediate vicinity of the equipment.",
+  "A sign must not create a distraction or become a hazard in itself.",
+  "Faded, degraded or damaged signs should be replaced immediately."
+];
+
+/* The walk-round, following Spectrum's Safety Signage Self Audit Tool. Each
+   zone is the set of questions worth asking while standing in it. */
+var GUIDE_CHECKS = [
+  ["Outside the building", [
+    "Are parking bays clearly marked?",
+    "Is disabled parking near the entrance and clearly marked?",
+    "Are speed restrictions in the grounds marked?",
+    "Can visitors find reception, goods-in and the car park?",
+    "Are no-parking areas marked?"
+  ]],
+  ["Assembly points", [
+    "Is the assembly point clearly identified and in a safe location?",
+    "Where there is more than one, is each defined and specified?",
+    "Leaving by a rear or side fire exit, can someone still find their way to it?"
+  ]],
+  ["Security and roof access", [
+    "If CCTV is in use, are signs visible and the operator's details shown?",
+    "Do fragile roofs and skylights carry a warning?",
+    "Are fragile roof signs still legible — check for fading in sunlight."
+  ]],
+  ["Smoking areas", [
+    "Is the designated smoking area clearly defined?",
+    "Is the route to it defined?",
+    "Where are e-cigarettes permitted, and does signage say so?"
+  ]],
+  ["Fire exit doors", [
+    "Are external fire doors marked?",
+    "Are fire doors free from obstacles?",
+    "Are fire exit signs readable from a distance, and from every part of the room?",
+    "Do fire doors carry a keep-shut notice?"
+  ]],
+  ["Fire exit signage", [
+    "Is there an exit sign with an arrow pointing up above each fire door? An arrow above a door should not point left or right.",
+    "Except in a single-door office, can an exit sign be seen from everywhere?",
+    "Do all exit signs show a running man and accompanying text?",
+    "Have signs using the old EC Directive designs been replaced?",
+    "Would the signs be visible in a power failure, or through smoke?",
+    "Is the escape direction clear — up or down the stairs?",
+    "Do stair treads and handrails contrast for the visually impaired, and would that contrast show in a power failure?",
+    "Are there measures for evacuating wheelchair users and visually impaired people?"
+  ]],
+  ["First aid", [
+    "Are first aid kits and eye-wash stations easy to find?",
+    "Is first aid information clearly marked?"
+  ]],
+  ["Fire equipment", [
+    "Are extinguishers identified with the type of fire they may be used on?",
+    "Is fire equipment visible from a distance and from every part of the room?",
+    "Does every fire alarm call point have a fire action notice above it?",
+    "Do people know whether the fire service is called manually or automatically?",
+    "Do people know not to use a lift in a fire?",
+    "Are fire marshals and wardens identified?"
+  ]],
+  ["Visitor areas", [
+    "Can visitors find the toilets?",
+    "Are hot water taps and tanks marked where they reach a harmful temperature?",
+    "Are wash-hands signs in the washrooms?",
+    "Do visitors know which areas they are restricted from?",
+    "Are there unexpected trip hazards, floor level changes or overhead obstacles?",
+    "Is PPE required before entering any area?",
+    "If visitors have a visual impairment, is braille signage in place?"
+  ]],
+  ["Offices", [
+    "Are mobile phones or cameras allowed?",
+    "Are there plugs or devices that must not be switched off?",
+    "Is food or drink permitted in the work area?"
+  ]],
+  ["Warehouse and manufacturing", [
+    "Are pedestrian-only walkways highlighted?",
+    "Are pedestrians warned of forklifts and heavy equipment?",
+    "Are bins, racking and equipment identifiable from one another?",
+    "Are there mirrors at blind corners?",
+    "Are escape routes visible from every part of the floor?",
+    "Are call points and fire-fighting equipment easy to find and understand?",
+    "Are any pipes exposed without identification?",
+    "Is equipment — forklifts, pallet trucks, ladders, podium steps — tagged to show it has been checked?"
+  ]]
 ];
 
 var GUIDE_REGS = [
   ["Health and Safety (Safety Signs and Signals) Regulations 1996",
-   "The core duty. Where a risk can't be avoided or controlled another way, a safety sign must be provided — and it has to follow the prescribed shape and colour for its type."],
-  ["BS EN ISO 7010", "The pictogram standard. Fixes one agreed symbol per hazard so a sign reads the same to anyone, in any language. New signage should be to this standard."],
+   "The core duty. The HSE puts it as: safety signs should be used where there is a significant risk to health and safety that has not been removed or controlled by other methods."],
+  ["BS EN ISO 7010", "The pictogram standard — a design directive and a list of compliant symbols, so a sign reads the same regardless of language, culture or setting. It is updated as new symbols are added, which is why old signs drift out of compliance."],
   ["Regulatory Reform (Fire Safety) Order 2005",
    "Puts fire safety on the 'responsible person'. Escape routes must be signed, fire-fighting equipment must be indicated, and both must be maintained."],
-  ["BS 5499-4 and BS 5499-10", "Guidance on choosing, siting and maintaining escape-route signage, and on how far a sign can be read from."],
+  ["BS 5499", "The earlier British Standard. Where BS EN ISO 7010 has not specified a symbol, signs are still made to BS 5499 until one is published — so a BS 5499 sign is not automatically wrong."],
   ["BS EN 1838 / BS 5266", "Emergency lighting. Sets what has to stay lit, and how escape signs behave when the mains supply fails."],
   ["Health Act 2006", "Smoke-free premises. A no-smoking sign is required at every enclosed workplace entrance."],
   ["Health and Safety Information for Employees Regulations 1989",
    "The HSE 'Health and Safety Law' poster must be displayed, or the equivalent leaflet issued to every employee."],
+  ["Health and Safety (First Aid) Regulations 1981",
+   "Employers must assess and provide first aid. Whatever is provided has to be easy to locate in an emergency."],
   ["Employers' Liability (Compulsory Insurance) Regulations 1998",
    "The certificate must be displayed where employees can read it, or be accessible to them electronically."],
   ["Electricity at Work Regulations 1989", "Underpins the warning and restricted-access signage on intake rooms, panels and switchgear."],
@@ -2564,11 +2664,15 @@ var GUIDE_REGS = [
 ];
 
 var GUIDE_FINDINGS = [
-  ["Faded or yellowed", "Most common failure outdoors and in sunlit corridors. If the colour has shifted, the sign no longer carries the meaning its colour is supposed to."],
+  ["An outdated symbol", "BS EN ISO 7010 is updated as new symbols are added, so a sign can be legible and still out of date. Exit signs using the old EC Directive designs are the usual offender."],
+  ["Faded or degraded", "Most common outdoors and in sunlit corridors. Spectrum's own guidance is blunt about it: faded, degraded or damaged signs should be replaced immediately."],
   ["Obstructed", "Stock, racking, a coat rack or a propped-open door in front of a sign is the same as no sign. Check with the door in both positions."],
-  ["Wrong standard mixed in", "Older BS 5499 running-man signs are not automatically wrong, but a route signed half in one system and half in the other is confusing. Keep one system per escape route."],
+  ["Fixed to something that moves", "A sign on a door or window — or right beside one — disappears the moment it is opened."],
+  ["Arrow pointing the wrong way", "An exit sign above a door should point up. Left or right above a door tells people to walk past it."],
+  ["No type on the extinguisher", "An extinguisher needs a sign saying which fires it may be used on. A water ID over a CO₂ unit is a finding, not a detail."],
+  ["Call point with no fire action notice", "Every call point should have a fire action notice above it."],
   ["Nothing to charge it", "Photoluminescent signs in a store room that is normally dark will not glow when they are needed."],
-  ["Peeling or curled", "Usually self-adhesive vinyl put on the wrong surface. Re-specify the material rather than re-sticking the same thing."],
+  ["Peeling or curled", "Usually self-adhesive vinyl on the wrong surface. Re-specify the material rather than re-sticking the same thing."],
   ["Right sign, wrong place", "A sign has to be where the decision is made — at the hazard, at the door, at the entrance to the zone — not around the corner from it."],
   ["No longer applicable", "Processes move. A hearing-protection zone that is now an office is worth recording as N/A so the customer can take it down."]
 ];
@@ -2579,9 +2683,11 @@ function renderGuide() {
   for (var zi = 0; zi < TPL.length; zi++) if (!seen[TPL[zi][0]]) { seen[TPL[zi][0]] = 1; zones++; }
   var h = '<h1 style="margin:2px 0 4px">Sign &amp; regulation guide</h1>'
     + '<p class="hint" style="margin-top:0">' + TPL.length + ' signs across ' + zones
-    + ' areas of a typical site, how to specify them, and the rules behind them.</p>'
+    + ' areas of a typical site, how to specify them, what to check on a walk-round, '
+    + 'and the rules behind them.</p>'
     + '<div class="segmented" role="tablist">'
-    +   seg("signs", "Signs") + seg("spec", "Specifying") + seg("regs", "Regulations")
+    +   seg("signs", "Signs") + seg("spec", "Specifying")
+    +   seg("checks", "Walk-round") + seg("regs", "Regulations")
     + '</div>'
     + '<div id="guideBody"></div>';
   $("#s-guide").innerHTML = h;
@@ -2595,6 +2701,7 @@ function renderGuide() {
 function renderGuideBody() {
   var el = $("#guideBody"); if (!el) return;
   if (GTAB === "spec") { el.innerHTML = guideSpecHtml(); return; }
+  if (GTAB === "checks") { el.innerHTML = guideChecksHtml(); return; }
   if (GTAB === "regs") { el.innerHTML = guideRegsHtml(); return; }
   el.innerHTML =
       '<div class="searchwrap" style="position:static;padding:10px 0 4px;margin:0"><div class="searchbar">'
@@ -2660,10 +2767,6 @@ function guideSpecHtml() {
        + '</span><b>' + esc(GUIDE_MATERIALS[i][1]) + '</b></div>'
        + '<p>' + esc(GUIDE_MATERIALS[i][2]) + '</p></div>';
   }
-  h += '<p class="refnote">Spectrum\u2019s photoluminescent range is P.S.P.A. Class B, tested to '
-    + 'DIN 67510 parts 1\u20134, and rated to glow for 10+ hours from full charge. Worth quoting when a '
-    + 'customer asks what \u201cglow in the dark\u201d actually means \u2014 confirm the current spec against '
-    + 'the product page before putting it in writing.</p>';
   h += '</div>';
 
   h += '<div class="sectionhead"><span class="eyebrow">Which format</span><span class="line"></span></div>'
@@ -2677,37 +2780,29 @@ function guideSpecHtml() {
 
   h += '<div class="sectionhead"><span class="eyebrow">Size and viewing distance</span><span class="line"></span></div>'
     + '<div class="refblock">'
-    + '<p>For escape-route signs the relationship is fixed: the furthest someone can be and still read the '
-    + 'sign is <b>100 × the height of the sign</b> for an ordinary or externally lit sign, and '
-    + '<b>200 ×</b> for an internally illuminated one. A 150 mm sign is therefore good for 15 m, '
-    + 'or 30 m if it is lit from within.</p>'
+    + '<p>Spectrum\u2019s suggested maximum viewing distances, by the height of the characters on '
+    + 'the sign. Take it as a guide \u2014 lighting and sightlines still decide it on the day.</p>'
     + '<div class="reftable-wrap"><table class="reftable"><thead><tr>'
-    + '<th>Read from</th><th>Escape sign</th><th>Other safety signs</th></tr></thead><tbody>';
+    + '<th>Character height</th><th>Readable from</th></tr></thead><tbody>';
   for (i = 0; i < GUIDE_SIZES.length; i++) {
-    h += '<tr><td>' + esc(GUIDE_SIZES[i][0]) + '</td><td>' + esc(GUIDE_SIZES[i][1])
-       + '</td><td>' + esc(GUIDE_SIZES[i][2]) + '</td></tr>';
+    h += '<tr><td>' + esc(GUIDE_SIZES[i][0]) + '</td><td>' + esc(GUIDE_SIZES[i][1]) + '</td></tr>';
   }
   h += '</tbody></table></div>'
-    + '<p class="refnote">The escape-route column is the BS 5499-4 / BS EN 1838 rule. The right-hand column '
-    + 'is normal practice for prohibition, mandatory and warning signs rather than a legal minimum — '
-    + 'ISO 3864-1 sets these by a distance factor that also takes lighting into account, so measure up '
-    + 'rather than assume in a poorly lit space.</p></div>';
+    + '<p style="margin-top:12px">Typical distances to design for:</p>'
+    + '<div class="reftable-wrap"><table class="reftable"><thead><tr>'
+    + '<th>Distance</th><th>Where</th></tr></thead><tbody>';
+  for (i = 0; i < GUIDE_DISTANCE_USE.length; i++) {
+    h += '<tr><td>' + esc(GUIDE_DISTANCE_USE[i][0]) + '</td><td>' + esc(GUIDE_DISTANCE_USE[i][1]) + '</td></tr>';
+  }
+  h += '</tbody></table></div>'
+    + '<p class="refnote">Escape-route signs follow their own rule: the furthest someone can be and '
+    + 'still read the sign is 100 \u00d7 its height, or 200 \u00d7 if it is internally illuminated '
+    + '(BS 5499-4 / BS EN 1838). A 150mm sign is good for 15m, or 30m lit from within.</p></div>';
 
-  h += '<div class="sectionhead"><span class="eyebrow">Where it goes</span><span class="line"></span></div>'
-    + '<div class="refblock"><ul>'
-    + '<li><b>At the decision, not past it.</b> A sign has to be visible at the point where someone chooses '
-    + 'what to do — the doorway, the junction, the entrance to the zone.</li>'
-    + '<li><b>Mandatory PPE signs at the threshold</b> of the area the PPE is needed in, so it can be put on '
-    + 'before entering rather than after.</li>'
-    + '<li><b>Fire equipment ID above the unit</b>, high enough to be found when the extinguisher itself is '
-    + 'behind a pallet or a coat.</li>'
-    + '<li><b>Escape signs in a continuous line.</b> From any point on the route the next sign should be '
-    + 'visible; typical mounting is 2.0–2.5 m above the floor, or directly above the opening on a door.</li>'
-    + '<li><b>Check the door open as well as shut.</b> A sign a fire door covers when it is propped is a sign '
-    + 'that isn’t there.</li>'
-    + '<li><b>Don’t mix sign systems on one route.</b> Older BS 5499 and current ISO 7010 running men are both '
-    + 'legible, but alternating between them along a corridor is not.</li>'
-    + '</ul></div>';
+  h += '<div class="sectionhead"><span class="eyebrow">Installing it</span><span class="line"></span></div>'
+    + '<div class="refblock"><ul>';
+  for (i = 0; i < GUIDE_INSTALL.length; i++) h += '<li>' + esc(GUIDE_INSTALL[i]) + '</li>';
+  h += '</ul></div>';
 
   h += '<div class="sectionhead"><span class="eyebrow">What to look for on site</span><span class="line"></span></div>'
     + '<div class="refblock"><ul>';
@@ -2715,6 +2810,26 @@ function guideSpecHtml() {
     h += '<li><b>' + esc(GUIDE_FINDINGS[i][0]) + '.</b> ' + esc(GUIDE_FINDINGS[i][1]) + '</li>';
   }
   h += '</ul></div>';
+  return h;
+}
+
+/* ---- walk-round ----
+   Spectrum's own Safety Signage Self Audit Tool, as the questions worth asking
+   while standing in each zone. The survey records what is there; this is the
+   prompt for spotting what isn't. */
+function guideChecksHtml() {
+  var i, j, h = '<div class="refblock" style="margin-top:18px">'
+    + '<p>A walk-round prompt, following Spectrum\u2019s safety signage self-audit. Anything you '
+    + 'answer \u201cno\u201d to is a sign that may be needed \u2014 note the location, size, wording, '
+    + 'material and quantity, which is exactly what the order list asks for.</p></div>';
+  for (i = 0; i < GUIDE_CHECKS.length; i++) {
+    h += '<div class="sectionhead"><span class="eyebrow">' + esc(GUIDE_CHECKS[i][0])
+       + '</span><span class="line"></span></div><div class="refblock"><ul>';
+    for (j = 0; j < GUIDE_CHECKS[i][1].length; j++) {
+      h += '<li>' + esc(GUIDE_CHECKS[i][1][j]) + '</li>';
+    }
+    h += '</ul></div>';
+  }
   return h;
 }
 
