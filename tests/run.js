@@ -11,7 +11,8 @@ const SUITES = [
   ['Survey, exports and undo', 'regression.js'],
   ['Postcode look-up', 'postcode.js'],
   ['Custom parts and photo links', 'custom-part-link.js'],
-  ['Sign presets and badges', 'signs.js']
+  ['Sign presets and badges', 'signs.js'],
+  ['Photo parts and quantities', 'photos-and-quantities.js']
 ];
 
 function run(file) {

@@ -253,7 +253,17 @@ body{overflow:hidden}
 .stepper button{width:36px;height:36px;display:grid;place-items:center;color:var(--ink);transition:background .13s}
 .stepper button:active{background:var(--rule-2)}
 .stepper button svg{width:15px;height:15px;stroke-width:2.6}
-.stepper .n{min-width:34px;text-align:center;font-weight:700;font-size:14.5px;font-family:var(--mono)}
+/* 16px is not a style choice: iOS Safari zooms the page when a field smaller
+   than that takes focus, and never zooms back out. */
+.stepper input.n{
+  width:52px;min-width:52px;text-align:center;font-weight:700;font-size:16px;
+  font-family:var(--mono);border:none;border-left:1.5px solid var(--rule);
+  border-right:1.5px solid var(--rule);background:none;padding:8px 2px;
+  -moz-appearance:textfield;color:var(--ink)
+}
+.stepper input.n:focus{outline:none;background:var(--rule-2)}
+.stepper input.n::-webkit-outer-spin-button,
+.stepper input.n::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .del{color:var(--ink-45);width:34px;height:34px;display:grid;place-items:center;border-radius:8px;flex:none}
 .del:hover{color:var(--red);background:var(--red-tint)}
 .del svg{width:16px;height:16px;stroke-width:2.1}
@@ -264,22 +274,27 @@ body{overflow:hidden}
 .ref svg{width:11px;height:11px;stroke-width:2.6}
 
 /* ---------- photos ---------- */
-.photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:10px}
 .photocard{background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
 .photocard img{width:100%;height:120px;object-fit:cover;display:block;background:var(--rule-2)}
-@supports (aspect-ratio:4/3){.photocard img{height:auto;aspect-ratio:4/3}}
+@supports (aspect-ratio:4/3){.photocard img{height:auto;aspect-ratio:4/3;max-height:210px}}
 .photocard .pc-body{padding:9px 10px 10px}
 .photocard input{
   width:100%;border:none;border-bottom:1.5px solid var(--rule);padding:5px 0;font-size:16px;background:none
 }
 .photocard input:focus{outline:none;border-bottom-color:var(--ink)}
 .photocard .note-add.small{margin-top:8px}
-.pc-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-45)}
+.pc-part{display:flex;align-items:center;gap:8px;margin-top:0;font-size:11.5px;color:var(--ink-45)}
+.pc-part-bits{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1}
 .pc-part-name{font-weight:640;color:var(--ink)}
-.pc-part-x{color:var(--ink-45);width:20px;height:20px;display:grid;place-items:center;border-radius:6px;flex:none;margin-left:auto}
+.pc-part-x{color:var(--ink-45);width:26px;height:26px;display:grid;place-items:center;border-radius:7px;flex:none}
 .pc-part-x:hover{color:var(--red);background:var(--red-tint)}
 .pc-part-x svg{width:11px;height:11px;stroke-width:2.4}
 .photocard .pc-act{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
+.photocard.pc-focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-tint),var(--shadow)}
+.pc-parts{margin-top:8px;border:1px solid var(--rule);border-radius:9px;overflow:hidden}
+.pc-parts .pc-part{padding:7px 4px 7px 9px;border-top:1px solid var(--rule-2)}
+.pc-parts .pc-part:first-child{border-top:none}
 .shoot{
   width:100%;padding:16px;border:2px dashed var(--rule);border-radius:13px;background:#fff;
   display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--ink-70);
@@ -482,10 +497,14 @@ body{overflow:hidden}
 
 .photostrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none}
 .photostrip::-webkit-scrollbar{display:none}
-.thumb{flex:none;width:118px}
+.thumb{flex:none;width:118px;text-align:left;padding:0;background:none;display:block;
+  border-radius:9px;transition:transform .12s}
+.thumb:active{transform:scale(.97)}
+.thumb:hover img{border-color:var(--ink-45)}
 .thumb img{width:118px;height:88px;object-fit:cover;border-radius:9px;border:1px solid var(--rule);display:block}
-.thumb figcaption{font-size:11px;color:var(--ink-45);margin-top:4px;line-height:1.35;
+.thumb .thumb-cap{font-size:11px;color:var(--ink-45);margin-top:4px;line-height:1.35;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.thumb img{transition:border-color .14s}
 
 /* ---- notes ---- */
 .noteblock{margin:2px 0 6px}
@@ -1754,6 +1773,21 @@ function adopt(rec) {
   var base = blank();
   for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) base[k] = rec[k];
   S = base;
+  photosToParts(S);
+}
+/* A photo used to hold at most one part. Surveys saved before that changed
+   still carry `part`; fold it into the list on the way in so nothing written
+   after this point has to know about both shapes. */
+function photosToParts(rec) {
+  var areas = rec && rec.areas;
+  if (!areas) return;
+  for (var i = 0; i < areas.length; i++) {
+    var ph = areas[i].photos || [];
+    for (var j = 0; j < ph.length; j++) {
+      if (!ph[j].parts) ph[j].parts = ph[j].part ? [ph[j].part] : [];
+      delete ph[j].part;
+    }
+  }
 }
 
 /* ---- writing ----
@@ -1997,6 +2031,9 @@ function surveyStats() {
 
 /* ---------- tabs ---------- */
 var TAB = "survey";
+/* Set when arriving at the Photos tab from a particular thumbnail, so that
+   photo is scrolled to and marked rather than left somewhere down the grid. */
+var focusPhoto = null;
 function go(tab) {
   TAB = tab;
   var sc = $("#scroller");
@@ -2147,14 +2184,17 @@ function renderArea(a) {
     for (var k = 0; k < a.photos.length; k++) {
       var stripBits = [];
       if (a.photos[k].note) stripBits.push(a.photos[k].note);
-      if (a.photos[k].part) stripBits.push(partLabel(a.photos[k].part));
-      h += '<figure class="thumb"><img src="' + a.photos[k].src + '" alt="">'
-         + (stripBits.length ? '<figcaption>' + esc(stripBits.join(" — ")) + '</figcaption>' : "")
-         + '</figure>';
+      var stripParts = a.photos[k].parts || [];
+      for (var sp = 0; sp < stripParts.length; sp++) stripBits.push(partLabel(stripParts[sp]));
+      h += '<button class="thumb" data-openphoto="' + a.photos[k].id + '">'
+         + '<img src="' + a.photos[k].src + '" alt="">'
+         + '<span class="thumb-cap">' + (stripBits.length ? esc(stripBits.join(" — ")) : "No description") + '</span>'
+         + '</button>';
     }
     h += '</div>';
   }
-  h += '<button class="btn btn-ghost btn-block" id="goPhotos">' + ic("camera") + 'Add photo</button>';
+  h += '<button class="btn btn-ghost btn-block" id="goPhotos">' + ic("camera")
+     + (a.photos.length ? 'Photos, notes and parts' : 'Add a photo') + '</button>';
 
   /* complete */
   h += '<div class="areafoot">';
@@ -2232,7 +2272,8 @@ function oline(a, j) {
     + '</div>'
     + '<div class="oline-foot">'
     + '<div class="stepper"><button data-q="' + o.id + '" data-d="-1" aria-label="Reduce quantity">' + ic("minus", 15) + '</button>'
-    + '<span class="n">' + o.qty + '</span>'
+    + '<input class="n" type="text" inputmode="numeric" pattern="[0-9]*" data-qset="' + o.id + '" '
+    + 'value="' + o.qty + '" aria-label="Quantity" autocomplete="off">'
     + '<button data-q="' + o.id + '" data-d="1" aria-label="Increase quantity">' + ic("plus", 15) + '</button></div>'
     + (o.note
         ? '<button class="note-add small inline" data-editnote="prod:' + o.id + '">' + ic("note", 13) + esc(o.note) + '</button>'
@@ -2416,7 +2457,8 @@ function addPart(idx) {
     var ph = photoById(a, pendingPhoto);
     pendingPhoto = null;
     if (!ph) return;
-    ph.part = { pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false };
+    if (!ph.parts) ph.parts = [];
+    ph.parts.push({ pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false });
     save(); toast("Part attached to photo");
     go("photos");
     return;
@@ -2469,7 +2511,7 @@ $("#fileIn").addEventListener("change", function (e) {
         toast("Couldn't process that photo — try again", true);
         return;
       }
-      a.photos.push({ id: S.seq++, src: url, note: "", part: null });
+      a.photos.push({ id: S.seq++, src: url, note: "", parts: [] });
       save(); render(); toast("Photo added to " + a.name);
       /* Photos are what actually fills the quota, so this is the moment worth
          re-checking how much room is left. */
@@ -2482,6 +2524,25 @@ $("#fileIn").addEventListener("change", function (e) {
   e.target.value = "";
 });
 
+/* Every part pinned to a photo, each removable on its own, with the add
+   button always there — a photo of a damaged panel often needs the sign, the
+   fixings and the post, not one of the three. */
+function photoPartsHtml(p) {
+  var list = p.parts || [], h = "", i;
+  for (i = 0; i < list.length; i++) {
+    var pt = list[i];
+    h += '<div class="pc-part"><span class="pc-part-bits">'
+       + '<span class="pn">' + esc(pt.pn || "Custom") + '</span>'
+       + '<span class="pc-part-name">' + esc(pt.name) + '</span>'
+       + (pt.mat ? '<span class="dot"></span><span>' + esc(pt.mat) + '</span>' : "")
+       + (pt.size ? '<span class="dot"></span><span>' + esc(pt.size) + '</span>' : "")
+       + '</span><button class="pc-part-x" data-partdel="' + p.id + ':' + i + '" aria-label="Remove '
+       + esc(pt.name) + '">' + ic("x", 12) + '</button></div>';
+  }
+  return (list.length ? '<div class="pc-parts">' + h + '</div>' : "")
+    + '<button class="note-add small" data-findpart="' + p.id + '">' + ic("link", 12)
+    + (list.length ? 'Add another part' : 'Add part') + '</button>';
+}
 function renderPhotos() {
   var a = ensureArea();
   var h = '<button class="backlink backArea">' + ic("back") + esc(a.name) + '</button>'
@@ -2496,16 +2557,11 @@ function renderPhotos() {
     h += '<div class="photogrid">';
     for (var i = 0; i < a.photos.length; i++) {
       var p = a.photos[i];
-      h += '<figure class="photocard"><img src="' + p.src + '" alt="Photo ' + (i + 1) + '">'
+      h += '<figure class="photocard" data-photocard="' + p.id + '">'
+         + '<img src="' + p.src + '" alt="Photo ' + (i + 1) + '">'
          + '<div class="pc-body"><input value="' + esc(p.note) + '" data-pnote="' + p.id
          + '" placeholder="What is it?">'
-         + (p.part
-             ? '<div class="pc-part"><span class="pn">' + esc(p.part.pn || "Custom") + '</span>'
-               + '<span class="pc-part-name">' + esc(p.part.name) + '</span>'
-               + (p.part.mat ? '<span class="dot"></span><span>' + esc(p.part.mat) + '</span>' : "")
-               + (p.part.size ? '<span class="dot"></span><span>' + esc(p.part.size) + '</span>' : "")
-               + '<button class="pc-part-x" data-partdel="' + p.id + '" aria-label="Remove part">' + ic("x", 11) + '</button></div>'
-             : '<button class="note-add small" data-findpart="' + p.id + '">' + ic("link", 12) + 'Add part</button>')
+         + photoPartsHtml(p)
          + '<div class="pc-act"><span class="eyebrow">Photo ' + (i + 1) + '</span>'
          + '<button class="del" data-pdel="' + p.id + '" aria-label="Delete photo">' + ic("bin", 16) + '</button>'
          + '</div></div></figure>';
@@ -2513,6 +2569,20 @@ function renderPhotos() {
     h += '</div>';
   }
   $("#s-photos").innerHTML = h;
+
+  if (focusPhoto != null) {
+    var card = $('[data-photocard="' + focusPhoto + '"]');
+    focusPhoto = null;
+    if (card) {
+      card.classList.add("pc-focus");
+      setTimeout(function () {
+        card.scrollIntoView({ block: "center", behavior: "smooth" });
+        var noteIn = card.querySelector("[data-pnote]");
+        if (noteIn) noteIn.focus({ preventScroll: true });
+      }, 60);
+      setTimeout(function () { card.classList.remove("pc-focus"); }, 1800);
+    }
+  }
 }
 
 /* ================= REPORT ================= */
@@ -3435,7 +3505,8 @@ function openCustomProduct() {
       var ph = photoById(a, pendingPhoto);
       pendingPhoto = null;
       if (ph) {
-        ph.part = { pn: "", name: n, mat: $("#c-mat").value.trim(), size: $("#c-size").value.trim(), custom: true };
+        if (!ph.parts) ph.parts = [];
+        ph.parts.push({ pn: "", name: n, mat: $("#c-mat").value.trim(), size: $("#c-size").value.trim(), custom: true });
         save();
       }
       closeSheet(); go("photos");
@@ -3772,12 +3843,14 @@ function buildWorkbook(photos) {
     }
 
     for (k = 0; k < a.photos.length; k++) {
-      var pp = a.photos[k].part;
-      if (!pp) continue;
-      push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
-             qty: 1, status: "For supply", rawStatus: "", req: "—",
-             note: a.photos[k].note || "", photoRef: photoRef(a, a.photos[k]) });
-      totalUnits += 1;
+      var pps = a.photos[k].parts || [];
+      for (var ppi = 0; ppi < pps.length; ppi++) {
+        var pp = pps[ppi];
+        push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
+               qty: 1, status: "For supply", rawStatus: "", req: "—",
+               note: a.photos[k].note || "", photoRef: photoRef(a, a.photos[k]) });
+        totalUnits += 1;
+      }
     }
   }
 
@@ -3886,7 +3959,7 @@ function buildWorkbook(photos) {
     var photoRowOf = {};
     for (r = 0; r < photos.length; r++) {
       p = photos[r];
-      var part = p.e.ph.part;
+      var pparts = p.e.ph.parts || [];
       var rowNum = prows.length + 1;                 /* 1-based; drawing anchors are 0-based */
       photoRowOf[p.e.ref] = rowNum;
       prows.push([
@@ -3894,7 +3967,7 @@ function buildWorkbook(photos) {
         p.e.area.name,
         "",                                          /* the picture sits over this cell */
         p.e.ph.note || (p.ok ? "" : "Image unavailable"),
-        part ? partLabel(part) : ""
+        pparts.map(partLabel).join("  ·  ")
       ]);
       if (p.ok) {
         scale = Math.min(IMG_W / p.w, IMG_H / p.h);
@@ -4176,10 +4249,17 @@ function buildPdf() {
           d.text("Photo " + (phi + 1) + " — see app", px + 8, d.y - ph / 2, 7.5, false, "8A8A8A");
         }
         var capY = d.y - ph - 9;
-        var thisPart = a.photos[phi].part;
-        if (thisPart) {
-          var partLine = wrapText(partLabel(thisPart), 6.8, true, pw)[0] || "";
+        /* Two parts named under the photo, then a count: the caption has to
+           leave room for the description, which is what the office reads. */
+        var thisParts = a.photos[phi].parts || [];
+        for (var tpi = 0; tpi < Math.min(2, thisParts.length); tpi++) {
+          var partLine = wrapText(partLabel(thisParts[tpi]), 6.8, true, pw)[0] || "";
           d.text(partLine, px, capY, 6.8, true, "1A1A1A");
+          capY -= 9;
+        }
+        if (thisParts.length > 2) {
+          d.text("+ " + (thisParts.length - 2) + " more part"
+            + (thisParts.length === 3 ? "" : "s"), px, capY, 6.8, false, "6B6B6B");
           capY -= 9;
         }
         /* Same reference the spreadsheet uses, so the two documents can be
@@ -4357,6 +4437,13 @@ document.addEventListener("click", function (e) {
   }
   if (t.closest("#goParts")) { pendingSign = null; Q = ""; shown = LIMIT; go("parts"); return; }
   if (t.closest("#goPhotos")) { go("photos"); return; }
+  /* The only route to a photo's note and parts used to be the button that
+     takes another one, so an existing photo couldn't be corrected. */
+  if ((b = t.closest("[data-openphoto]"))) {
+    focusPhoto = +b.dataset.openphoto;
+    go("photos");
+    return;
+  }
   if ((b = t.closest("[data-add]"))) { addPart(+b.dataset.add); return; }
   if ((b = t.closest("[data-del]"))) {
     if (!a) return;
@@ -4411,15 +4498,19 @@ document.addEventListener("click", function (e) {
   }
   if ((b = t.closest("[data-partdel]"))) {
     if (!a) return;
-    var ppid = +b.dataset.partdel, ppAreaId = a.id;
+    var ppBits = b.dataset.partdel.split(":");
+    var ppid = +ppBits[0], ppIdx = +ppBits[1], ppAreaId = a.id;
     var pph = photoById(a, ppid);
-    if (!pph) return;
-    var removedPart = pph.part;
-    pph.part = null; save(); render();
+    if (!pph || !pph.parts || !pph.parts[ppIdx]) return;
+    var removedPart = pph.parts.splice(ppIdx, 1)[0];
+    save(); render();
     toast("Part removed", { action: { label: "Undo", fn: function () {
       var ar = areaById(ppAreaId); if (!ar) return;
       var tph = photoById(ar, ppid);
-      if (tph) { tph.part = removedPart; save(); render(); }
+      if (!tph) return;
+      if (!tph.parts) tph.parts = [];
+      tph.parts.splice(Math.min(ppIdx, tph.parts.length), 0, removedPart);
+      save(); render();
     } } });
     return;
   }
@@ -4561,6 +4652,16 @@ function askClear() {
   });
 }
 
+/* An empty or part-typed quantity is only allowed while the field has focus.
+   Leaving it puts back whatever was actually stored. */
+document.addEventListener("focusout", function (e) {
+  var t = e.target, a = area();
+  if (!t || t.dataset == null || t.dataset.qset == null || !a) return;
+  var qid = +t.dataset.qset;
+  for (var i = 0; i < a.order.length; i++) {
+    if (a.order[i].id === qid) { t.value = a.order[i].qty; return; }
+  }
+});
 document.addEventListener("input", function (e) {
   var t = e.target, a = area();
   if (t.id === "q") {
@@ -4584,6 +4685,16 @@ document.addEventListener("input", function (e) {
     var pid = +t.dataset.pnote;
     for (var j = 0; j < a.photos.length; j++) if (a.photos[j].id === pid) a.photos[j].note = t.value;
     save(); return;
+  }
+  /* Typed quantity. Deliberately not re-rendering: redrawing the row on every
+     keystroke takes the focus with it, and "25" becomes "2". The value is
+     tidied up on blur instead. */
+  if (t.dataset.qset != null && a) {
+    var qid = +t.dataset.qset, typed = t.value.replace(/[^0-9]/g, "");
+    if (typed !== t.value) t.value = typed;
+    var n = Math.min(9999, Math.max(1, parseInt(typed, 10) || 1));
+    for (var qi = 0; qi < a.order.length; qi++) if (a.order[qi].id === qid) a.order[qi].qty = n;
+    save(); badges(); return;
   }
 });
 

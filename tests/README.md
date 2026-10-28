@@ -9,7 +9,7 @@ and check what comes out.
 ```
 npm install                              # once
 npx playwright install chromium          # once — the browser itself
-npm test                                 # all five suites
+npm test                                 # all six suites
 ```
 
 One suite on its own:
@@ -31,6 +31,7 @@ produced — spreadsheets, PDFs, the generated test photographs — is left in
 | `postcode.js` | The offline postcode look-up, served with the same Content-Security-Policy as the published app so it can't quietly fall back to the network. |
 | `custom-part-link.js` | Custom parts carry size and material into the spreadsheet, and the link from a line back to its photo. |
 | `signs.js` | Every preset resolves to the signs it names, and every sign draws a badge that stays inside its own box. |
+| `photos-and-quantities.js` | Getting back to a photo to edit its note or delete it, several parts on one photo, and typing a quantity instead of tapping + repeatedly. Checks inside the exported workbook, not just that a file appeared. |
 
 ## Test photographs
 
