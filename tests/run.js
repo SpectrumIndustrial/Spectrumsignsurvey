@@ -15,7 +15,9 @@ const SUITES = [
   ['Photo parts and quantities', 'photos-and-quantities.js'],
   ['Unique ids across a reload', 'ids.js'],
   ['Undo more than one step', 'undo.js'],
-  ['Survey backup and restore', 'backup.js']
+  ['Survey backup and restore', 'backup.js'],
+  ['Awkward text in and out', 'awkward-input.js'],
+  ['The paths nothing else walks', 'journeys.js']
 ];
 
 function run(file) {

@@ -9,7 +9,7 @@ and check what comes out.
 ```
 npm install                              # once
 npx playwright install chromium          # once — the browser itself
-npm test                                 # all nine suites
+npm test                                 # all eleven suites
 ```
 
 One suite on its own:
@@ -31,6 +31,8 @@ produced — spreadsheets, PDFs, the generated test photographs — is left in
 | `postcode.js` | The offline postcode look-up, served with the same Content-Security-Policy as the published app so it can't quietly fall back to the network. |
 | `custom-part-link.js` | Custom parts carry size and material into the spreadsheet, and the link from a line back to its photo. |
 | `signs.js` | Every preset resolves to the signs it names, and every sign draws a badge that stays inside its own box. |
+| `awkward-input.js` | Site names, areas, notes and part names full of `&`, `<`, quotes, brackets and backslashes, then both exports opened back up and read. The XML and PDF escaping is checked by reading the text back, not by the app saying it finished. |
+| `journeys.js` | The paths the other suites never walk — found by listing every handler in the app and checking it against what the tests click. Mostly the destructive ones: deleting a sign, an area, a survey, clearing a note, plus the filters, paging and switching between surveys. |
 | `backup.js` | Builds a survey with everything in it, saves it to a file, wipes the device completely, and opens it back up — every field compared before and after. |
 | `undo.js` | Deleting two things in a row and walking both back. |
 | `ids.js` | Strips the id counter out of a stored survey the way a stale save would, reloads, and checks nothing is handed an id already in use. |
