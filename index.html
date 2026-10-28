@@ -682,6 +682,8 @@ html.dark .toast .toast-act{color:#9FE0FF}
 
 /* ---- area menu extra actions ---- */
 .menurow{display:flex;gap:8px;margin-bottom:8px}
+.linkbtn{font:inherit;color:var(--red);font-weight:660;text-decoration:underline;
+  text-underline-offset:2px;padding:2px 0}
 .menurow .btn{flex:1}
 
 /* ---- guide: category legend ---- */
@@ -908,6 +910,7 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span id="toastMsg"></span><span id="toastAct"></span></div>
 <input type="file" id="fileIn" accept="image/*" capture="environment" hidden>
+<input type="file" id="surveyIn" accept=".json,application/json" hidden>
 
 <!-- UK postcode districts, held locally so the look-up needs no network:
      it works in a plant room with no signal, and there is no request to
@@ -1778,8 +1781,22 @@ function adopt(rec) {
 /* Everything a record coming off disk has to be put through before the app
    touches it, whichever door it came in by. */
 function normalise(rec) {
+  shapeAreas(rec);
   photosToParts(rec);
   sealIds(rec);
+}
+/* Every renderer walks a.signs, a.order and a.photos without checking they
+   exist. They always do in a record this app wrote; a record that came in
+   from a file is only as well-formed as whatever produced it. */
+function shapeAreas(rec) {
+  if (!rec) return;
+  if (!(rec.areas instanceof Array)) rec.areas = [];
+  for (var i = 0; i < rec.areas.length; i++) {
+    var a = rec.areas[i];
+    if (!(a.signs instanceof Array)) a.signs = [];
+    if (!(a.order instanceof Array)) a.order = [];
+    if (!(a.photos instanceof Array)) a.photos = [];
+  }
 }
 /* Areas, signs, products and photos all take their id from one counter, and
    everything that can be deleted, renumbered or linked is found by that id.
@@ -1988,6 +2005,34 @@ var toastT;
 /* toast(msg) / toast(msg, true) keep working exactly as before (plain or
    warning toast). Pass an options object instead of a boolean to also get
    an action button, e.g. toast("Photo deleted", {action:{label:"Undo", fn:restore}}). */
+/* Undo used to live and die with one toast: delete two photos in quick
+   succession and the second toast replaced the first, taking the only way
+   back to it. The actions are kept on a stack instead, and after one is
+   undone the toast confirming it offers the next — so tapping Undo again
+   keeps walking back. Capped, because this is a safety net for the last few
+   taps, not a history of the survey. */
+var UNDO = [], UNDO_MAX = 12;
+function undoable(fn) { UNDO.push(fn); if (UNDO.length > UNDO_MAX) UNDO.shift(); }
+function runUndo() {
+  var fn = UNDO.pop();
+  if (!fn) return;
+  fn();                                  /* restores, and toasts its own confirmation */
+  if (UNDO.length) offerUndo("Undo previous");
+}
+/* Put the button on whatever toast is showing now, rather than raising
+   another one on top of it. */
+function offerUndo(label) {
+  var actEl = $("#toastAct");
+  if (!actEl) return;
+  actEl.innerHTML = '<button class="toast-act" type="button">' + esc(label) + '</button>';
+  actEl.firstChild.addEventListener("click", function () {
+    clearTimeout(toastT);
+    $("#toast").classList.remove("on");
+    runUndo();
+  });
+  clearTimeout(toastT);
+  toastT = setTimeout(function () { $("#toast").classList.remove("on"); }, 3600);
+}
 function toast(msg, opts) {
   if (opts === true) opts = { warn: true };
   opts = opts || {};
@@ -1998,7 +2043,15 @@ function toast(msg, opts) {
   iconEl.innerHTML = ic(warn ? "alert" : "check", 16);
   var svg = iconEl.querySelector("svg");
   if (svg) svg.style.color = warn ? "#FFD9D6" : "";
-  if (opts.action && opts.action.label && opts.action.fn) {
+  if (opts.undo) {
+    undoable(opts.undo);
+    actEl.innerHTML = '<button class="toast-act" type="button">Undo</button>';
+    actEl.firstChild.addEventListener("click", function () {
+      clearTimeout(toastT);
+      el.classList.remove("on");
+      runUndo();
+    });
+  } else if (opts.action && opts.action.label && opts.action.fn) {
     actEl.innerHTML = '<button class="toast-act" type="button">' + esc(opts.action.label) + '</button>';
     actEl.firstChild.addEventListener("click", function () {
       clearTimeout(toastT);
@@ -2011,7 +2064,7 @@ function toast(msg, opts) {
   el.classList.add("on");
   clearTimeout(toastT);
   toastT = setTimeout(function () { el.classList.remove("on"); },
-    opts.duration || (opts.action ? 3200 : 1700));
+    opts.duration || (opts.undo || opts.action ? 3200 : 1700));
 }
 function matOf(p) { return p[2] >= 0 ? MAT[p[2]] : ""; }
 function sizeOf(p) { return p[3] >= 0 ? SIZ[p[3]] : ""; }
@@ -2504,6 +2557,11 @@ function addPart(idx) {
    dismissed with nothing picked). */
 window.addEventListener("focus", function () {
   if (document.activeElement === $("#fileIn")) $("#fileIn").blur();
+});
+$("#surveyIn").addEventListener("change", function (e) {
+  var f = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (f) importSurveyFile(f);
 });
 $("#fileIn").addEventListener("change", function (e) {
   e.target.blur();
@@ -3154,8 +3212,13 @@ function openSurveys() {
     + '<div id="surveyList"><div class="skel"></div><div class="skel"></div></div>'
     + '<button class="btn btn-primary btn-block" id="newSurvey" style="margin-top:4px">'
     + ic("plus", 16) + 'Start a new survey</button>'
+    + '<div class="menurow" style="margin-top:8px">'
+    +   '<button class="btn btn-ghost" id="saveSurveyFile">' + ic("down") + 'Save to a file</button>'
+    +   '<button class="btn btn-ghost" id="openSurveyFile">' + ic("open") + 'Open a file</button>'
+    + '</div>'
     + '<p class="hint" style="margin-top:10px">Held on this device only — never uploaded, and not visible '
-    + 'to anyone else’s phone.</p>');
+    + 'to anyone else’s phone. <b>Save to a file</b> is how you back one up, move it to another '
+    + 'phone, or hand it over part-finished — the PDF and spreadsheet can’t be opened back up.</p>');
   paintSurveyList();
 }
 function paintSurveyList() {
@@ -3196,6 +3259,71 @@ function paintSurveyList() {
     el.innerHTML = h;
   });
 }
+/* ---- a survey as a file ----
+   Until now a survey existed on exactly one phone. The PDF and the spreadsheet
+   are outputs, not the survey: neither can be opened back up and carried on
+   with. A phone lost or wiped mid-job took the job with it, and there was no
+   way to hand a half-finished survey to the other surveyor. This writes the
+   record itself — areas, signs, products, photos, notes, the lot — and reads
+   one back in. */
+function exportSurveyFile() {
+  flushNow();
+  var json;
+  try { json = JSON.stringify(S); }
+  catch (e) { toast("Couldn't package this survey", true); return; }
+  var bytes;
+  try { bytes = new TextEncoder().encode(json); }
+  catch (e2) {
+    /* No TextEncoder: fall back to a byte-per-character copy, which is right
+       for ASCII and close enough for the size shown on the sheet. */
+    bytes = new Uint8Array(json.length);
+    for (var i = 0; i < json.length; i++) bytes[i] = json.charCodeAt(i) & 255;
+  }
+  shareOrSave(bytes, fileStem() + ".survey.json", "application/json", "Survey file");
+}
+
+/* Anything that isn't recognisably one of our surveys is refused rather than
+   half-loaded: a record missing the pieces the screens walk would fail later,
+   somewhere unrelated, and look like a bug in the app. */
+function parseSurveyFile(text) {
+  var rec;
+  try { rec = JSON.parse(text); } catch (e) { return null; }
+  if (!rec || typeof rec !== "object" || rec instanceof Array) return null;
+  if (!(rec.areas instanceof Array)) return null;
+  if (typeof rec.site !== "string" && typeof rec.by !== "string") return null;
+  return rec;
+}
+
+function importSurveyFile(file) {
+  var rd = new FileReader();
+  rd.onerror = function () { toast("Couldn't read that file", true); };
+  rd.onload = function (ev) {
+    var rec = parseSurveyFile(ev.target.result);
+    if (!rec) { toast("That isn't a survey file", true); return; }
+    listSurveys(function (list) {
+      /* Keep the original id when nothing here uses it, so a survey restored
+         onto a wiped phone comes back as itself. Mint a new one when it would
+         land on top of a survey already on this device — an import must never
+         overwrite something. */
+      var clash = !rec.id, i;
+      for (i = 0; i < list.length; i++) if (list[i].id === rec.id) clash = true;
+      if (clash) rec.id = newId();
+      rec.updated = Date.now();
+      flushNow();
+      adopt(rec);
+      setCurrentId(S.id);
+      persist();
+      exported = true;                 /* it came from a file; nothing unsaved */
+      closeSheet(); go("survey");
+      var t = surveyStats();
+      toast("Opened " + (S.site || "survey") + " — " + t.areas
+        + (t.areas === 1 ? " area" : " areas")
+        + (t.photos ? ", " + t.photos + (t.photos === 1 ? " photo" : " photos") : ""));
+    });
+  };
+  rd.readAsText(file);
+}
+
 function confirmDeleteSurvey(id) {
   listSurveys(function (list) {
     var m = null, i;
@@ -3262,6 +3390,12 @@ function openSetup(first) {
     +   fld("resInfo", "Their contact details", S.resInfo, "Phone or email")
     + '</details>'
     + '<button class="btn btn-primary btn-block" id="saveSetup">' + (first ? "Start survey" : "Save") + '</button>'
+    /* Someone on a replacement phone meets this sheet first, and what they
+       want is their backup, not a new survey. */
+    + (first
+        ? '<p class="hint" style="text-align:center;margin:10px 0 0">Picking up where a phone left off? '
+          + '<button type="button" id="setupOpenFile" class="linkbtn">Open a survey file</button></p>'
+        : "")
     + (first ? "" : '<button class="btn btn-ghost btn-block danger" id="wipe" style="margin-top:8px">'
         + ic("bin", 16) + 'Delete this survey</button>'));
   document.querySelectorAll("#f-site,#f-by").forEach(function (inp) {
@@ -4479,14 +4613,14 @@ document.addEventListener("click", function (e) {
     oRemoved = a.order.splice(oIdx, 1)[0];
     save();
     if (TAB === "parts") { renderOrderList(); badges(); } else render();
-    toast("Product removed", { action: { label: "Undo", fn: function () {
+    toast("Product removed", { undo: function () {
       var ar = areaById(oAreaId);
       if (!ar) return;
       ar.order.splice(Math.min(oIdx, ar.order.length), 0, oRemoved);
       save();
       if (TAB === "parts") { renderOrderList(); badges(); } else render();
       toast("Product restored");
-    } } });
+    } });
     return;
   }
   if ((b = t.closest("[data-q]"))) {
@@ -4506,13 +4640,13 @@ document.addEventListener("click", function (e) {
     if (pIdx < 0) return;
     pRemoved = a.photos.splice(pIdx, 1)[0];
     save(); render();
-    toast("Photo deleted", { action: { label: "Undo", fn: function () {
+    toast("Photo deleted", { undo: function () {
       var ar = areaById(pAreaId);
       if (!ar) return;
       ar.photos.splice(Math.min(pIdx, ar.photos.length), 0, pRemoved);
       save(); render();
       toast("Photo restored");
-    } } });
+    } });
     return;
   }
   if ((b = t.closest("[data-findpart]"))) {
@@ -4530,14 +4664,14 @@ document.addEventListener("click", function (e) {
     if (!pph || !pph.parts || !pph.parts[ppIdx]) return;
     var removedPart = pph.parts.splice(ppIdx, 1)[0];
     save(); render();
-    toast("Part removed", { action: { label: "Undo", fn: function () {
+    toast("Part removed", { undo: function () {
       var ar = areaById(ppAreaId); if (!ar) return;
       var tph = photoById(ar, ppid);
       if (!tph) return;
       if (!tph.parts) tph.parts = [];
       tph.parts.splice(Math.min(ppIdx, tph.parts.length), 0, removedPart);
       save(); render();
-    } } });
+    } });
     return;
   }
   if ((b = t.closest("[data-editnote]"))) { openNote(b.dataset.editnote); return; }
@@ -4614,6 +4748,8 @@ document.addEventListener("click", function (e) {
   if (t.closest("#reset")) { askClear(); return; }
   if (t.closest("#btnSetup")) { openSetup(false); return; }
   if (t.closest("#btnSurveys")) { openSurveys(); return; }
+  if (t.closest("#saveSurveyFile")) { exportSurveyFile(); return; }
+  if (t.closest("#openSurveyFile") || t.closest("#setupOpenFile")) { $("#surveyIn").click(); return; }
   if ((b = t.closest("[data-place]"))) {
     var chosen = b.getAttribute("data-place");
     var ai = $("#f-addr");

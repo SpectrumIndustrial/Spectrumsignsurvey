@@ -13,7 +13,9 @@ const SUITES = [
   ['Custom parts and photo links', 'custom-part-link.js'],
   ['Sign presets and badges', 'signs.js'],
   ['Photo parts and quantities', 'photos-and-quantities.js'],
-  ['Unique ids across a reload', 'ids.js']
+  ['Unique ids across a reload', 'ids.js'],
+  ['Undo more than one step', 'undo.js'],
+  ['Survey backup and restore', 'backup.js']
 ];
 
 function run(file) {

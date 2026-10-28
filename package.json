@@ -11,7 +11,9 @@
     "test:signs": "node tests/signs.js",
     "test:parts": "node tests/custom-part-link.js",
     "test:photos": "node tests/photos-and-quantities.js",
-    "test:ids": "node tests/ids.js"
+    "test:ids": "node tests/ids.js",
+    "test:undo": "node tests/undo.js",
+    "test:backup": "node tests/backup.js"
   },
   "devDependencies": {
     "playwright": "^1.56.1"

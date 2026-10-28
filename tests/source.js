@@ -64,5 +64,62 @@ zones.forEach((z, i) => {
 });
 ck(!broken, 'the signs in each zone sit together in the list' + (broken ? ` — ${broken} is split` : ''));
 
+/* ---- taps ----
+
+   Every tap in the app goes through one delegated handler: a chain of
+   `t.closest("[data-x]")` tests, first match wins, with about twenty
+   attribute names sharing one flat namespace. That is how a button carrying
+   data-open="0" for "open all the walk-round zones" ended up matching the
+   branch that opens an *area* — no error, no failing test, it just quietly
+   went to the wrong screen and changed which area was active.
+
+   Nothing here can tell two meanings apart by reading the source, so instead
+   the counts are pinned. Adding a tap that reuses an existing action name
+   changes its emit count and fails this check, which forces the question
+   "is this the same action, or have I just collided with one?" to be asked
+   at the right moment. Changing the numbers is fine — doing it deliberately
+   is the whole point. */
+const chain = src.slice(src.indexOf('document.addEventListener("click", function (e) {'));
+const claims = [...chain.matchAll(/closest\("\[data-([a-z]+)\]"\)/g)].map(m => m[1]);
+const emitted = {};
+for (const m of src.matchAll(/data-([a-z]+)=/g)) emitted[m[1]] = (emitted[m[1]] || 0) + 1;
+
+/* action name -> how many places in the source emit it */
+const ACTIONS = {
+  add: 1, addsign: 1, del: 1, delsign: 1, delsurvey: 1, editnote: 8, filter: 1,
+  find: 2, findpart: 1, gtab: 1, guideadd: 1, open: 2, openphoto: 1,
+  opensurvey: 1, partdel: 1, pdel: 1, pick: 2, place: 1, preset: 1, q: 2, set: 1
+};
+/* Carried on elements but never a tap: payload the handlers read, state the
+   stylesheet matches on, and the fields with their own input listeners. */
+const NOT_ACTIONS = { cat: 2, d: 2, photocard: 2, pnote: 1, qset: 1, qty: 1, s: 6, sign: 1, tab: 5, v: 1 };
+
+const twice = [...new Set(claims)].filter(k => claims.filter(c => c === k).length > 1);
+ck(twice.length === 0, 'no action is claimed by two branches'
+   + (twice.length ? ` — ${twice.join(', ')}` : ` (${claims.length} branches)`));
+
+const dead = [...new Set(claims)].filter(k => !emitted[k]);
+ck(dead.length === 0, 'no branch waits for an action nothing emits'
+   + (dead.length ? ` — ${dead.join(', ')}` : ''));
+
+const unclaimed = [...new Set(claims)].filter(k => !(k in ACTIONS));
+const missing = Object.keys(ACTIONS).filter(k => claims.indexOf(k) < 0);
+ck(unclaimed.length === 0 && missing.length === 0,
+   'the action list matches the branches that exist'
+   + (unclaimed.length ? ` — unlisted: ${unclaimed.join(', ')}` : '')
+   + (missing.length ? ` — listed but gone: ${missing.join(', ')}` : ''));
+
+const drifted = Object.keys(ACTIONS).filter(k => emitted[k] !== ACTIONS[k]);
+ck(drifted.length === 0, 'each action is emitted from the places it was emitted from'
+   + (drifted.length
+      ? ` — ${drifted.map(k => `data-${k} now ${emitted[k]}, expected ${ACTIONS[k]}`).join('; ')}`
+        + '\n       if that is a new tap, give it its own name; if it is the same'
+        + '\n       action in another place, update the count in tests/source.js'
+      : ''));
+
+const stray = Object.keys(emitted).filter(k => !(k in ACTIONS) && !(k in NOT_ACTIONS));
+ck(stray.length === 0, 'every data- attribute is either an action or listed as not one'
+   + (stray.length ? ` — ${stray.map(k => 'data-' + k).join(', ')}` : ''));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
