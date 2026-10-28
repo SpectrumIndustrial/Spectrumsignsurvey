@@ -1773,7 +1773,33 @@ function adopt(rec) {
   var base = blank();
   for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) base[k] = rec[k];
   S = base;
-  photosToParts(S);
+  normalise(S);
+}
+/* Everything a record coming off disk has to be put through before the app
+   touches it, whichever door it came in by. */
+function normalise(rec) {
+  photosToParts(rec);
+  sealIds(rec);
+}
+/* Areas, signs, products and photos all take their id from one counter, and
+   everything that can be deleted, renumbered or linked is found by that id.
+   The counter is only a source of unique ids while it stays ahead of what is
+   already in the survey — so a record that arrives without it (saved by a
+   build from before it existed, or restored from anywhere else) would restart
+   at 1 and hand out ids that are already in use. The first thing that collides
+   is the area itself, which no single screen lists next to its photos, so it
+   would surface much later as "it deleted the wrong one". Take the floor from
+   what is actually in the record rather than trusting the stored number. */
+function sealIds(rec) {
+  var areas = (rec && rec.areas) || [], max = 0, i, j;
+  function seen(v) { if (typeof v === "number" && isFinite(v) && v > max) max = v; }
+  for (i = 0; i < areas.length; i++) {
+    seen(areas[i].id);
+    for (j = 0; j < (areas[i].signs || []).length; j++) seen(areas[i].signs[j].id);
+    for (j = 0; j < (areas[i].order || []).length; j++) seen(areas[i].order[j].id);
+    for (j = 0; j < (areas[i].photos || []).length; j++) seen(areas[i].photos[j].id);
+  }
+  if (!(rec.seq > max)) rec.seq = max + 1;
 }
 /* A photo used to hold at most one part. Surveys saved before that changed
    still carry `part`; fold it into the list on the way in so nothing written
@@ -1884,7 +1910,7 @@ function tickSaved() {
 function legacyLoad() {
   try {
     var raw = STORE && STORE.getItem(KEY);
-    if (raw) { var p = JSON.parse(raw); for (var k in p) S[k] = p[k]; }
+    if (raw) { var p = JSON.parse(raw); for (var k in p) S[k] = p[k]; normalise(S); }
   } catch (e) { memOnly = true; }
 }
 /* Boot: open the survey that was last on screen. Falls back to the most

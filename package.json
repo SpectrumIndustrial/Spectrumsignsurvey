@@ -10,7 +10,8 @@
     "test:postcode": "node tests/postcode.js",
     "test:signs": "node tests/signs.js",
     "test:parts": "node tests/custom-part-link.js",
-    "test:photos": "node tests/photos-and-quantities.js"
+    "test:photos": "node tests/photos-and-quantities.js",
+    "test:ids": "node tests/ids.js"
   },
   "devDependencies": {
     "playwright": "^1.56.1"
