@@ -15,7 +15,8 @@
     "test:undo": "node tests/undo.js",
     "test:backup": "node tests/backup.js",
     "test:awkward": "node tests/awkward-input.js",
-    "test:journeys": "node tests/journeys.js"
+    "test:journeys": "node tests/journeys.js",
+    "test:site": "node tests/site-feedback.js"
   },
   "devDependencies": {
     "playwright": "^1.56.1"

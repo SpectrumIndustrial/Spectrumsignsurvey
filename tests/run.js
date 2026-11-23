@@ -17,7 +17,8 @@ const SUITES = [
   ['Undo more than one step', 'undo.js'],
   ['Survey backup and restore', 'backup.js'],
   ['Awkward text in and out', 'awkward-input.js'],
-  ['The paths nothing else walks', 'journeys.js']
+  ['The paths nothing else walks', 'journeys.js'],
+  ['Reported from site', 'site-feedback.js']
 ];
 
 function run(file) {

@@ -292,8 +292,16 @@ body{overflow:hidden}
 .pc-part-x svg{width:11px;height:11px;stroke-width:2.4}
 .photocard .pc-act{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
 .photocard.pc-focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-tint),var(--shadow)}
+.pc-part-top{display:flex;align-items:center;gap:8px;width:100%}
+/* The quantity sits under the name rather than beside it: a part number, a
+   name, a material, a size and a stepper do not fit across a phone. */
+.stepper.small{align-self:flex-start;margin-top:5px;border-radius:8px}
+.stepper.small button{width:30px;height:30px}
+.stepper.small button svg{width:13px;height:13px}
+.stepper.small input.n{width:44px;min-width:44px;padding:5px 2px;font-size:16px}
 .pc-parts{margin-top:8px;border:1px solid var(--rule);border-radius:9px;overflow:hidden}
-.pc-parts .pc-part{padding:7px 4px 7px 9px;border-top:1px solid var(--rule-2)}
+.pc-parts .pc-part{padding:7px 4px 8px 9px;border-top:1px solid var(--rule-2);
+  display:flex;flex-direction:column;align-items:stretch}
 .pc-parts .pc-part:first-child{border-top:none}
 .shoot{
   width:100%;padding:16px;border:2px dashed var(--rule);border-radius:13px;background:#fff;
@@ -1773,6 +1781,7 @@ function deleteSurvey(id, cb) {
 /* Replace the live survey with a stored record, defaulting any field a record
    written by an older version of the app doesn't carry yet. */
 function adopt(rec) {
+  forgetScroll();
   var base = blank();
   for (var k in rec) if (Object.prototype.hasOwnProperty.call(rec, k)) base[k] = rec[k];
   S = base;
@@ -1829,6 +1838,10 @@ function photosToParts(rec) {
     for (var j = 0; j < ph.length; j++) {
       if (!ph[j].parts) ph[j].parts = ph[j].part ? [ph[j].part] : [];
       delete ph[j].part;
+      /* parts pinned before quantities existed were all one-offs */
+      for (var q = 0; q < ph[j].parts.length; q++) {
+        if (!(ph[j].parts[q].qty > 0)) ph[j].parts[q].qty = 1;
+      }
     }
   }
 }
@@ -1961,6 +1974,7 @@ function bootLoad(done) {
 function startSurvey() {
   flushNow();
   S = blank();
+  forgetScroll();
   closeSheet(); go("survey");
   setTimeout(function () { openSetup(true); }, 240);
 }
@@ -2113,9 +2127,17 @@ var TAB = "survey";
 /* Set when arriving at the Photos tab from a particular thumbnail, so that
    photo is scrolled to and marked rather than left somewhere down the grid. */
 var focusPhoto = null;
+/* Where each tab was last left, so coming back puts you where you were.
+   Going to find a part for the seventh photo and being returned to the top of
+   the list means scrolling back down every time. Cleared when the thing being
+   looked at changes — a different area or survey is a different page, and
+   restoring a position from the last one would be nonsense. */
+var scrollPos = {};
+function forgetScroll() { scrollPos = {}; }
 function go(tab) {
-  TAB = tab;
   var sc = $("#scroller");
+  if (sc && TAB) scrollPos[TAB + ":" + (S.active == null ? "" : S.active)] = sc.scrollTop;
+  TAB = tab;
   document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("on"); });
   $("#s-" + tab).classList.add("on");
   document.querySelectorAll(".nav button").forEach(function (b) {
@@ -2123,8 +2145,13 @@ function go(tab) {
     b.classList.toggle("on", on);
     b.setAttribute("aria-selected", on ? "true" : "false");
   });
-  if (sc) sc.scrollTop = 0;
   render();
+  /* After render, or the screen is still the old height and the position
+     gets clamped to it. */
+  if (sc) {
+    var want = scrollPos[tab + ":" + (S.active == null ? "" : S.active)] || 0;
+    sc.scrollTop = Math.min(want, Math.max(0, sc.scrollHeight - sc.clientHeight));
+  }
 }
 document.querySelectorAll(".nav button").forEach(function (b) {
   b.addEventListener("click", function () {
@@ -2264,7 +2291,9 @@ function renderArea(a) {
       var stripBits = [];
       if (a.photos[k].note) stripBits.push(a.photos[k].note);
       var stripParts = a.photos[k].parts || [];
-      for (var sp = 0; sp < stripParts.length; sp++) stripBits.push(partLabel(stripParts[sp]));
+      for (var sp = 0; sp < stripParts.length; sp++) {
+        stripBits.push(partQtyPrefix(stripParts[sp]) + partLabel(stripParts[sp]));
+      }
       h += '<button class="thumb" data-openphoto="' + a.photos[k].id + '">'
          + '<img src="' + a.photos[k].src + '" alt="">'
          + '<span class="thumb-cap">' + (stripBits.length ? esc(stripBits.join(" — ")) : "No description") + '</span>'
@@ -2371,6 +2400,10 @@ function photoById(a, id) {
 /* Compact "PN — Name (Material, Size)" label for a part attached to a photo,
    shared by the photo card, the area preview strip, and both exports so the
    wording never drifts between them. */
+/* "3 x" only when there is more than one — a quantity of one is noise. */
+function partQtyPrefix(part) {
+  return (part && part.qty > 1) ? part.qty + " x " : "";
+}
 function partLabel(part) {
   if (!part) return "";
   var meta = [part.mat, part.size].filter(Boolean).join(", ");
@@ -2455,6 +2488,7 @@ function renderParts() {
     + 'autocorrect="off" autocapitalize="none" spellcheck="false" enterkeyhint="search">'
     + '<button class="clr" id="clrQ" aria-label="Clear search" hidden>' + ic("x", 16) + '</button>'
     + '</div><div class="filters" id="filters"></div></div>'
+    + '<div id="refCustom"></div>'
     + '<div class="count" id="count"></div>'
     + '<div id="results"></div>'
     + '<div id="orderList"></div>';
@@ -2480,14 +2514,21 @@ function renderRefNote() {
     var ph = photoById(a, pendingPhoto);
     if (ph) name = photoRef(a, ph) + " · this photo";
   }
-  /* The custom-item button also sits at the foot of the results, but that is
-     below two dozen products. When something is waiting to be matched, the
-     answer is often "it isn't in the catalogue" — so offer it here too. */
   el.innerHTML = name
     ? '<div class="refbar">' + ic("link", 14) + 'For: <b>' + esc(name) + '</b>'
-      + '<button id="clearRef">Cancel</button></div>'
-      + '<button class="btn btn-ghost btn-block" id="addCustom" style="margin:0 0 12px">'
-      + ic("plus", 15) + 'Not in the catalogue? Add a custom item</button>' : "";
+      + '<button id="clearRef">Cancel</button></div>' : "";
+  /* The custom-item button used to sit directly above the search box, which
+     is where a thumb lands reaching for the search — so it kept getting
+     tapped by mistake. Search first, then the way out of the catalogue.
+     (It also sits at the foot of the results, but that is below two dozen
+     products, and when something is waiting to be matched the answer is
+     often "it isn't in the catalogue".) */
+  var cEl2 = $("#refCustom");
+  if (cEl2) {
+    cEl2.innerHTML = name
+      ? '<button class="btn btn-ghost btn-block" id="addCustom" style="margin:10px 0 2px">'
+        + ic("plus", 15) + 'Not in the catalogue? Add a custom item</button>' : "";
+  }
 }
 function renderResults() {
   var res = matches(shown), h = "", i;
@@ -2537,7 +2578,7 @@ function addPart(idx) {
     pendingPhoto = null;
     if (!ph) return;
     if (!ph.parts) ph.parts = [];
-    ph.parts.push({ pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false });
+    ph.parts.push({ pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false, qty: 1 });
     save(); toast("Part attached to photo");
     go("photos");
     return;
@@ -2615,13 +2656,20 @@ function photoPartsHtml(p) {
   var list = p.parts || [], h = "", i;
   for (i = 0; i < list.length; i++) {
     var pt = list[i];
-    h += '<div class="pc-part"><span class="pc-part-bits">'
+    h += '<div class="pc-part"><div class="pc-part-top"><span class="pc-part-bits">'
        + '<span class="pn">' + esc(pt.pn || "Custom") + '</span>'
        + '<span class="pc-part-name">' + esc(pt.name) + '</span>'
        + (pt.mat ? '<span class="dot"></span><span>' + esc(pt.mat) + '</span>' : "")
        + (pt.size ? '<span class="dot"></span><span>' + esc(pt.size) + '</span>' : "")
        + '</span><button class="pc-part-x" data-partdel="' + p.id + ':' + i + '" aria-label="Remove '
-       + esc(pt.name) + '">' + ic("x", 12) + '</button></div>';
+       + esc(pt.name) + '">' + ic("x", 12) + '</button></div>'
+       + '<div class="stepper small"><button data-pq="' + p.id + ':' + i + '" data-d="-1" '
+       + 'aria-label="Reduce quantity">' + ic("minus", 14) + '</button>'
+       + '<input class="n" type="text" inputmode="numeric" pattern="[0-9]*" data-pqset="'
+       + p.id + ':' + i + '" value="' + (pt.qty || 1) + '" aria-label="Quantity for '
+       + esc(pt.name) + '" autocomplete="off">'
+       + '<button data-pq="' + p.id + ':' + i + '" data-d="1" aria-label="Increase quantity">'
+       + ic("plus", 14) + '</button></div></div>';
   }
   return (list.length ? '<div class="pc-parts">' + h + '</div>' : "")
     + '<button class="note-add small" data-findpart="' + p.id + '">' + ic("link", 12)
@@ -3666,7 +3714,8 @@ function openCustomProduct() {
       pendingPhoto = null;
       if (ph) {
         if (!ph.parts) ph.parts = [];
-        ph.parts.push({ pn: "", name: n, mat: $("#c-mat").value.trim(), size: $("#c-size").value.trim(), custom: true });
+        ph.parts.push({ pn: "", name: n, mat: $("#c-mat").value.trim(),
+                        size: $("#c-size").value.trim(), custom: true, qty: 1 });
         save();
       }
       closeSheet(); go("photos");
@@ -4006,10 +4055,11 @@ function buildWorkbook(photos) {
       var pps = a.photos[k].parts || [];
       for (var ppi = 0; ppi < pps.length; ppi++) {
         var pp = pps[ppi];
+        var ppQty = pp.qty > 0 ? pp.qty : 1;
         push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
-               qty: 1, status: "For supply", rawStatus: "", req: "—",
+               qty: ppQty, status: "For supply", rawStatus: "", req: "—",
                note: a.photos[k].note || "", photoRef: photoRef(a, a.photos[k]) });
-        totalUnits += 1;
+        totalUnits += ppQty;
       }
     }
   }
@@ -4127,7 +4177,7 @@ function buildWorkbook(photos) {
         p.e.area.name,
         "",                                          /* the picture sits over this cell */
         p.e.ph.note || (p.ok ? "" : "Image unavailable"),
-        pparts.map(partLabel).join("  ·  ")
+        pparts.map(function (pt) { return partQtyPrefix(pt) + partLabel(pt); }).join("  ·  ")
       ]);
       if (p.ok) {
         scale = Math.min(IMG_W / p.w, IMG_H / p.h);
@@ -4413,7 +4463,8 @@ function buildPdf() {
            leave room for the description, which is what the office reads. */
         var thisParts = a.photos[phi].parts || [];
         for (var tpi = 0; tpi < Math.min(2, thisParts.length); tpi++) {
-          var partLine = wrapText(partLabel(thisParts[tpi]), 6.8, true, pw)[0] || "";
+          var partLine = wrapText(partQtyPrefix(thisParts[tpi]) + partLabel(thisParts[tpi]),
+                                  6.8, true, pw)[0] || "";
           d.text(partLine, px, capY, 6.8, true, "1A1A1A");
           capY -= 9;
         }
@@ -4656,6 +4707,19 @@ document.addEventListener("click", function (e) {
     setTimeout(function () { var q = $("#q"); if (q) q.focus(); }, 180);
     return;
   }
+  /* A part pinned to a photo keeps its own count, the same way a product on
+     the order list does — five of the same sign in one shot is normal. */
+  if ((b = t.closest("[data-pq]"))) {
+    if (!a) return;
+    var pqBits = b.dataset.pq.split(":");
+    var pqPhoto = photoById(a, +pqBits[0]);
+    if (!pqPhoto || !pqPhoto.parts) return;
+    var pqPart = pqPhoto.parts[+pqBits[1]];
+    if (!pqPart) return;
+    pqPart.qty = Math.min(9999, Math.max(1, (pqPart.qty || 1) + (+b.dataset.d)));
+    save(); render();
+    return;
+  }
   if ((b = t.closest("[data-partdel]"))) {
     if (!a) return;
     var ppBits = b.dataset.partdel.split(":");
@@ -4818,7 +4882,13 @@ function askClear() {
    Leaving it puts back whatever was actually stored. */
 document.addEventListener("focusout", function (e) {
   var t = e.target, a = area();
-  if (!t || t.dataset == null || t.dataset.qset == null || !a) return;
+  if (!t || t.dataset == null || !a) return;
+  if (t.dataset.pqset != null) {
+    var pb = t.dataset.pqset.split(":"), pph = photoById(a, +pb[0]);
+    if (pph && pph.parts && pph.parts[+pb[1]]) t.value = pph.parts[+pb[1]].qty || 1;
+    return;
+  }
+  if (t.dataset.qset == null) return;
   var qid = +t.dataset.qset;
   for (var i = 0; i < a.order.length; i++) {
     if (a.order[i].id === qid) { t.value = a.order[i].qty; return; }
@@ -4847,6 +4917,19 @@ document.addEventListener("input", function (e) {
     var pid = +t.dataset.pnote;
     for (var j = 0; j < a.photos.length; j++) if (a.photos[j].id === pid) a.photos[j].note = t.value;
     save(); return;
+  }
+  /* Same as the order list below: no re-render while typing, or the field
+     loses focus and "25" becomes "2". */
+  if (t.dataset.pqset != null && a) {
+    var pqs = t.dataset.pqset.split(":");
+    var pqsPhoto = photoById(a, +pqs[0]);
+    var pqsTyped = t.value.replace(/[^0-9]/g, "");
+    if (pqsTyped !== t.value) t.value = pqsTyped;
+    if (pqsPhoto && pqsPhoto.parts && pqsPhoto.parts[+pqs[1]]) {
+      pqsPhoto.parts[+pqs[1]].qty = Math.min(9999, Math.max(1, parseInt(pqsTyped, 10) || 1));
+      save();
+    }
+    return;
   }
   /* Typed quantity. Deliberately not re-rendering: redrawing the row on every
      keystroke takes the focus with it, and "25" becomes "2". The value is

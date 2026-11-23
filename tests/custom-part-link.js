@@ -78,8 +78,14 @@ const check = (ok, msg) => { ok ? pass++ : fail++; console.log(`  ${ok ? 'ok  ' 
   await page.locator('[data-findpart]').nth(1).click();
   await page.waitForTimeout(700);
   check(/P2/.test(await page.textContent('#refNote')), 'ref bar shows the shared photo reference');
-  const customTop = page.locator('#refNote #addCustom');
-  check(await customTop.count() === 1, 'custom item offered at the top of the results');
+  /* The custom-item button used to sit in #refNote, directly above the search
+     box, and kept being tapped by mistake when reaching for search. It is
+     still offered when a photo is waiting to be matched — just below the
+     search box now, in #refCustom. */
+  const customTop = page.locator('#refCustom #addCustom');
+  check(await customTop.count() === 1, 'custom item still offered, below the search box');
+  check(await page.locator('#refNote #addCustom').count() === 0,
+        'and no longer sitting above it');
   await customTop.click();
   await page.waitForTimeout(500);
   check(/Attach to photo/.test(await page.textContent('#saveCustom')), 'sheet targets the photo');

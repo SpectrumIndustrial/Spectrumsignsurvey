@@ -88,11 +88,12 @@ for (const m of src.matchAll(/data-([a-z]+)=/g)) emitted[m[1]] = (emitted[m[1]] 
 const ACTIONS = {
   add: 1, addsign: 1, del: 1, delsign: 1, delsurvey: 1, editnote: 8, filter: 1,
   find: 2, findpart: 1, gtab: 1, guideadd: 1, open: 2, openphoto: 1,
-  opensurvey: 1, partdel: 1, pdel: 1, pick: 2, place: 1, preset: 1, q: 2, set: 1
+  opensurvey: 1, partdel: 1, pdel: 1, pick: 2, place: 1, pq: 2, preset: 1, q: 2, set: 1
 };
 /* Carried on elements but never a tap: payload the handlers read, state the
    stylesheet matches on, and the fields with their own input listeners. */
-const NOT_ACTIONS = { cat: 2, d: 2, photocard: 2, pnote: 1, qset: 1, qty: 1, s: 6, sign: 1, tab: 5, v: 1 };
+const NOT_ACTIONS = { cat: 2, d: 4, photocard: 2, pnote: 1, pqset: 1, qset: 1, qty: 1,
+                      s: 6, sign: 1, tab: 5, v: 1 };
 
 const twice = [...new Set(claims)].filter(k => claims.filter(c => c === k).length > 1);
 ck(twice.length === 0, 'no action is claimed by two branches'
