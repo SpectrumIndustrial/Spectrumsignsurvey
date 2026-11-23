@@ -1,0 +1,39 @@
+name: Tests
+
+# Runs on every push and pull request. The app is one HTML file with no build
+# step, so this is the whole check: install Playwright, drive the app in a real
+# browser, and fail the run if anything regresses.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Only Chromium — the suites don't test other engines, and pulling all
+      # three browsers is most of the run time.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test
+
+      # The exported spreadsheets and PDFs from the run, so a failure can be
+      # opened rather than guessed at.
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: tests/.out/
+          retention-days: 7
