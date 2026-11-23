@@ -171,7 +171,9 @@ const LONG = {
      + (collisions ? ` — ${collisions}, e.g. ${firstPair}` : ''));
 
   const all = lay.ops(buf).filter(o => o.kind === 'text' && o.s.trim());
-  const low = all.filter(o => o.y < 40 && !/Spectrum Industrial|Page \d+ of \d+/.test(o.s));
+  /* the three things the footer is allowed to hold */
+  const low = all.filter(o => o.y < 40
+    && !/Spectrum Industrial|Page \d+ of \d+|^app \d{4}-\d{2}-\d{2}$/.test(o.s));
   ck(low.length === 0, 'nothing but the footer sits below the bottom margin'
      + (low.length ? ` — ${low.length} line(s)` : ''));
   ck(all.every(o => o.x >= 39), 'nothing starts left of the margin either');

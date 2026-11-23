@@ -1709,6 +1709,12 @@ function isoBadge(k, size, iconKey) {
    before, including the "this device only" note. */
 var KEY = "spectrum.survey.v2";           /* legacy single-survey key; still read once, to migrate */
 var DB_NAME = "spectrum.surveys", DB_VER = 1, ST_FULL = "surveys", ST_META = "meta";
+/* Which build produced this. Printed small in the PDF footer and shown on
+   the site details sheet, because "the change isn't there" and "the phone is
+   holding an old copy of the page" look identical from the outside, and
+   there was no way to tell them apart from a finished report. Bump it with
+   any change worth being able to identify from a PDF someone emails back. */
+var BUILD = "2026-11-24";
 var CUR_KEY = "spectrum.currentSurvey";
 var STORE = (function () {
   try { window.sessionStorage.setItem("__t", "1"); window.sessionStorage.removeItem("__t");
@@ -2128,12 +2134,21 @@ function isAssessed(a) { return areaStats(a).done > 0; }
 function surveyStats(reportOnly) {
   var t = { areas:S.areas.length, areasDone:0, signs:0, done:0, ok:0, missing:0, damaged:0, na:0,
             statOK:0, statBad:0, statTotal:0, lines:0, units:0, photos:0,
-            surveyed:0, refAreas:0 };
+            surveyed:0, refAreas:0, photoLines:0, photoUnits:0 };
   for (var i = 0; i < S.areas.length; i++) {
     var a = S.areas[i], st = areaStats(a);
     if (a.done) t.areasDone++;
     t.lines += a.order.length; t.photos += a.photos.length;
     for (var j = 0; j < a.order.length; j++) t.units += a.order[j].qty;
+    /* Parts pinned to a photo are products the office has to supply, and
+       both documents list them. Counted separately so the Parts badge still
+       means the area's own order list, and added in wherever the figure is
+       meant to be everything to be supplied. */
+    for (var pz = 0; pz < a.photos.length; pz++) {
+      var pzp = a.photos[pz].parts || [];
+      t.photoLines += pzp.length;
+      for (var pq = 0; pq < pzp.length; pq++) t.photoUnits += (pzp[pq].qty > 0 ? pzp[pq].qty : 1);
+    }
     if (st.done) t.surveyed++; else t.refAreas++;
     if (reportOnly && !st.done) continue;
     t.signs += st.total; t.done += st.done; t.ok += st.ok; t.missing += st.missing;
@@ -2142,6 +2157,8 @@ function surveyStats(reportOnly) {
   }
   t.assessed = t.statOK + t.statBad;
   t.pct = t.assessed ? Math.round(t.statOK / t.assessed * 100) : null;
+  t.allLines = t.lines + t.photoLines;
+  t.allUnits = t.units + t.photoUnits;
   return t;
 }
 
@@ -2848,7 +2865,8 @@ function renderReport() {
 
   h += '<div class="card totals"><div class="eyebrow" style="margin-bottom:9px">Totals</div>'
      + '<div class="totalrow">'
-     + tot(t.areas, "areas") + tot(t.lines, "products") + tot(t.units, "units") + tot(t.photos, "photos")
+     + tot(t.areas, "areas") + tot(t.allLines, "products") + tot(t.allUnits, "units")
+     + tot(t.photos, "photos")
      + '</div>'
      + (t.refAreas
          ? '<p class="hint" style="margin:10px 0 0">' + t.refAreas
@@ -2901,6 +2919,8 @@ function renderReport() {
            + 'Nothing is uploaded, and no one else’s phone can see it.'
            + (storagePct !== null ? ' Storage ' + storagePct + '% used.' : '')
          : 'Held in this tab only and cleared when you close it. Export before you finish.')
+     + ' App version <b>' + esc(BUILD) + '</b> — it is printed on the report too, so a PDF '
+     + 'can always be matched to the version that made it.'
      + '</p>';
 
   $("#s-report").innerHTML = h;
@@ -4626,7 +4646,7 @@ function buildPdf() {
   d.text(t.pct === null ? "—" : t.pct + "%", d.mL + 14, d.y - 16, 24, true, "111111");
   var kx = d.mL + 132;
   var kpis = [[t.areas, "Areas"], [t.ok, "In place"], [t.missing, "Missing"],
-              [t.damaged, "Damaged"], [t.lines, "Products"], [t.units, "Units"]];
+              [t.damaged, "Damaged"], [t.allLines, "Products"], [t.allUnits, "Units"]];
   for (var ki = 0; ki < kpis.length; ki++) {
     var kcol = kpis[ki][1] === "Missing" ? "C8102E"
              : kpis[ki][1] === "Damaged" ? "B87400"
@@ -4700,6 +4720,18 @@ function buildPdf() {
     var rep = function () { tableHead(ac, alab); };
     var loose2 = [];
     for (var li = 0; li < a.order.length; li++) if (!a.order[li].signId) loose2.push(a.order[li]);
+    /* A part pinned to a photo is a request for supply exactly like one added
+       on its own, but it only ever appeared in the caption under the picture.
+       The office reads the table, so the same part was easy to miss purely
+       because there was an image attached to it. They are listed here too,
+       each carrying its photo's reference so the row and the picture can be
+       read together, and they still appear under the photo as before. The
+       spreadsheet has always listed them this way. */
+    var photoParts = [];
+    for (var qi = 0; qi < a.photos.length; qi++) {
+      var qps = a.photos[qi].parts || [];
+      for (var qj = 0; qj < qps.length; qj++) photoParts.push([a.photos[qi], qps[qj]]);
+    }
     /* Which signs earn a row: all of them in a surveyed area, and in an
        unsurveyed one only those a product was chosen against. */
     var srows = [];
@@ -4709,7 +4741,7 @@ function buildPdf() {
       if (surveyed || ps0.length) srows.push([sg0, ps0]);
     }
 
-    if (srows.length || loose2.length) tableHead(ac, alab);
+    if (srows.length || loose2.length || photoParts.length) tableHead(ac, alab);
     else if (!a.photos.length) {
       tableHead(ac, alab);
       d.text("Nothing recorded in this area.", d.mL, d.y, 8.2, false, "9A9A9A");
@@ -4739,6 +4771,17 @@ function buildPdf() {
                     (loose2[lk].pn || "CUSTOM") + "  " + loose2[lk].name,
                     String(loose2[lk].qty), loose2[lk].note || ""],
         { boldFirst: true, colors: ["6B6B6B", "1A1A1A", "1A1A1A", "1A1A1A", "6B6B6B"],
+          bold: [true, false, false, true, false], repeat: rep });
+    }
+    for (var qk = 0; qk < photoParts.length; qk++) {
+      var qph = photoParts[qk][0], qpt = photoParts[qk][1];
+      tableRow(ac, [photoRef(a, qph), "For supply",
+                    (qpt.pn || "CUSTOM") + (qpt.amended ? " (edited)" : "") + "  " + qpt.name
+                      + ([qpt.mat, qpt.size].filter(Boolean).length
+                          ? "  (" + [qpt.mat, qpt.size].filter(Boolean).join(", ") + ")" : ""),
+                    String(qpt.qty > 0 ? qpt.qty : 1),
+                    [qph.note || "", qpt.note || ""].filter(Boolean).join(" / ")],
+        { boldFirst: true, colors: ["6B6B6B", "6B6B6B", "1A1A1A", "1A1A1A", "6B6B6B"],
           bold: [true, false, false, true, false], repeat: rep });
     }
 
@@ -4817,6 +4860,8 @@ function buildPdf() {
     var save2 = d.cur; d.cur = pg;
     d.line(d.mL, 34, d.mR, 34, "DDDDDD", 0.7);
     d.text("Spectrum Industrial  ·  part of Centurion Europe", d.mL, 24, 7, false, "9A9A9A");
+    var bstamp = "app " + BUILD;
+    d.text(bstamp, d.mL + (CW - textWidth(bstamp, 6.5, false)) / 2, 24, 6.5, false, "C4C4C4");
     var pn = "Page " + (fp + 1) + " of " + d.pages.length;
     d.text(pn, d.mR - textWidth(pn, 7, false), 24, 7, false, "9A9A9A");
     d.cur = save2;

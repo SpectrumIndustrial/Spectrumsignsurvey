@@ -208,9 +208,29 @@ const ck = (ok, msg) => { ok ? pass++ : fail++; console.log(`  ${ok ? 'ok  ' : '
   await page.waitForTimeout(1600);
   const pbuf = Buffer.from(await page.evaluate(() => window.__grabbed));
   fs.writeFileSync(path.join(OUT, 'edit-parts.pdf'), pbuf);
-  const joined = pdf.text(pbuf).join('\n');
+  const lines = pdf.text(pbuf);
+  const joined = lines.join('\n');
   ck(pdf.structure(pbuf).isPdf, 'the PDF builds');
   ck(new RegExp(pn + ' \\(edited\\)').test(joined), 'and names the edited part the same way');
+
+  /* A part pinned to a photo used to appear only in the caption under the
+     picture. The office reads the table. */
+  console.log('\n--- parts on a photo are in the table, not just under the picture ---');
+  const forSupply = lines.filter(l => l === 'For supply').length;
+  ck(forSupply >= 2, `both parts on the photo have a row of their own (${forSupply})`);
+  ck(lines.some(l => /^P\d+$/.test(l)), 'each row is labelled with the photo it came from');
+  ck(/Bespoke bracket, galvanised/.test(joined), 'the custom one is listed');
+  ck(/Mild steel/.test(joined), 'with its material and size on the row');
+  ck(/Panel by the roller door/.test(joined), 'and the photo description against it');
+  /* and still under the picture — the caption wraps at a narrower width, so
+     count a fragment short enough to survive the wrap rather than the phrase */
+  const capCount = (joined.match(/Bespoke/g) || []).length;
+  ck(capCount >= 2, `it appears both in the table and under the photo (${capCount} places)`);
+
+  console.log('\n--- the report says which version made it ---');
+  ck(lines.some(l => /^app \d{4}-\d{2}-\d{2}$/.test(l)),
+     'the footer carries the build, so a PDF can be matched to the code that made it'
+     + ' — ' + (lines.find(l => /^app \d{4}/.test(l)) || 'absent'));
 
   console.log(`\n${pass} passed, ${fail} failed`);
   console.log(errs.length ? 'ERRORS:\n' + errs.join('\n') : 'no console errors');
