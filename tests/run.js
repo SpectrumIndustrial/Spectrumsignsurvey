@@ -19,7 +19,8 @@ const SUITES = [
   ['Awkward text in and out', 'awkward-input.js'],
   ['The paths nothing else walks', 'journeys.js'],
   ['Reported from site', 'site-feedback.js'],
-  ['Settling, discontinued lines and unsurveyed areas', 'four-changes.js']
+  ['Settling, discontinued lines and unsurveyed areas', 'four-changes.js'],
+  ['Editing a part pinned to a photo', 'edit-photo-parts.js']
 ];
 
 function run(file) {

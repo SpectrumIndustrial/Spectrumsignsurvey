@@ -288,7 +288,13 @@ body{overflow:hidden}
 .photocard input:focus{outline:none;border-bottom-color:var(--ink)}
 .photocard .note-add.small{margin-top:8px}
 .pc-part{display:flex;align-items:center;gap:8px;margin-top:0;font-size:11.5px;color:var(--ink-45)}
-.pc-part-bits{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1}
+/* The row of part details is the way into editing it, so it is a button —
+   left-aligned and borderless so it still reads as the line it was. */
+.pc-part-bits{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;flex:1;
+  background:none;border:0;padding:3px 2px;margin:-3px -2px;border-radius:7px;
+  font:inherit;color:inherit;text-align:left;min-height:30px}
+.pc-part-bits:hover{background:var(--rule-2)}
+.pc-part-bits .pc-pen{width:11px;height:11px;stroke-width:2.2;color:var(--ink-45);flex:none}
 .pc-part-name{font-weight:640;color:var(--ink)}
 .pc-part-x{color:var(--ink-45);width:26px;height:26px;display:grid;place-items:center;border-radius:7px;flex:none}
 .pc-part-x:hover{color:var(--red);background:var(--red-tint)}
@@ -2426,6 +2432,10 @@ var Q = "", fMat = "", fSize = "", LIMIT = 24, shown = LIMIT, pendingSign = null
    of the results unless asked for, and the count below the search says how
    many are being held back so nothing is hidden silently. */
 var showDisc = false;
+/* Set while the catalogue is open to swap one part on a photo for another,
+   rather than to add a second. Cleared the moment a product is picked, the
+   reference bar is cancelled, or the catalogue is left. */
+var replacingPart = null;
 
 function photoById(a, id) {
   if (!a) return null;
@@ -2442,10 +2452,31 @@ function partQtyPrefix(part) {
 function partLabel(part) {
   if (!part) return "";
   var meta = [part.mat, part.size].filter(Boolean).join(", ");
-  return (part.pn ? part.pn + " — " : "") + part.name + (meta ? " (" + meta + ")" : "");
+  /* A catalogue part the surveyor has reworded or resized is marked, so the
+     office checks the description against the part number instead of quoting
+     the catalogue's version of it without knowing. */
+  var pn = part.pn ? part.pn + (part.amended ? " (edited)" : "") + " — " : "";
+  return pn + part.name + (meta ? " (" + meta + ")" : "");
 }
 
 function isSku(q) { return /[0-9]/.test(q) && /^[A-Za-z0-9\-_/. ]+$/.test(q); }
+
+/* The catalogue row a part number came from, so an edited part can be told
+   from one still exactly as the catalogue lists it. */
+function catalogueRow(pn) {
+  if (!pn || !ensureCatalogue()) return null;
+  for (var i = 0; i < PRD.length; i++) if (PRD[i][0] === pn) return PRD[i];
+  return null;
+}
+/* A catalogue part whose description, material or size has been changed is
+   flagged, because the office orders against the part number and would
+   otherwise quote the catalogue's version of it without knowing. */
+function markAmended(pt) {
+  var row = pt.pn ? catalogueRow(pt.pn) : null;
+  if (!row) { delete pt.amended; return; }
+  if (pt.name !== row[1] || pt.mat !== matOf(row) || pt.size !== sizeOf(row)) pt.amended = true;
+  else delete pt.amended;
+}
 
 function matches(collect) {
   if (!ensureCatalogue()) return { count: 0, ids: [] };
@@ -2557,7 +2588,8 @@ function renderRefNote() {
     if (ph) name = photoRef(a, ph) + " · this photo";
   }
   el.innerHTML = name
-    ? '<div class="refbar">' + ic("link", 14) + 'For: <b>' + esc(name) + '</b>'
+    ? '<div class="refbar">' + ic("link", 14)
+      + (replacingPart ? 'Replacing the part on: ' : 'For: ') + '<b>' + esc(name) + '</b>'
       + '<button id="clearRef">Cancel</button></div>' : "";
   /* The custom-item button used to sit directly above the search box, which
      is where a thumb lands reaching for the search — so it kept getting
@@ -2624,10 +2656,29 @@ function addPart(idx) {
   var p = PRD[idx];
   if (pendingPhoto) {
     var ph = photoById(a, pendingPhoto);
-    pendingPhoto = null;
+    var swap = replacingPart;
+    pendingPhoto = null; replacingPart = null;
     if (!ph) return;
     if (!ph.parts) ph.parts = [];
-    ph.parts.push({ pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false, qty: 1 });
+    var fresh = { pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false, qty: 1 };
+    var si2 = swap && swap.ph === ph.id ? ph.parts.indexOf(swap.ref) : -1;
+    if (si2 >= 0) {
+      /* The quantity was a decision of its own, so it carries over to the
+         product that takes its place. */
+      var old = ph.parts[si2], areaId2 = a.id;
+      fresh.qty = old.qty || 1;
+      ph.parts[si2] = fresh;
+      save(); go("photos");
+      toast("Swapped for " + p[0], { undo: function () {
+        var ur = areaById(areaId2); if (!ur) return;
+        var uph = photoById(ur, ph.id);
+        if (!uph || !uph.parts || !uph.parts[si2]) return;
+        uph.parts[si2] = old;
+        save(); render(); toast("Put the first part back");
+      } });
+      return;
+    }
+    ph.parts.push(fresh);
     save(); toast("Part attached to photo");
     go("photos");
     return;
@@ -2705,12 +2756,16 @@ function photoPartsHtml(p) {
   var list = p.parts || [], h = "", i;
   for (i = 0; i < list.length; i++) {
     var pt = list[i];
-    h += '<div class="pc-part"><div class="pc-part-top"><span class="pc-part-bits">'
+    h += '<div class="pc-part"><div class="pc-part-top">'
+       + '<button class="pc-part-bits" data-partedit="' + p.id + ':' + i + '" aria-label="Edit '
+       + esc(pt.name) + '">'
        + '<span class="pn">' + esc(pt.pn || "Custom") + '</span>'
        + '<span class="pc-part-name">' + esc(pt.name) + '</span>'
        + (pt.mat ? '<span class="dot"></span><span>' + esc(pt.mat) + '</span>' : "")
        + (pt.size ? '<span class="dot"></span><span>' + esc(pt.size) + '</span>' : "")
-       + '</span><button class="pc-part-x" data-partdel="' + p.id + ':' + i + '" aria-label="Remove '
+       + (pt.amended ? '<span class="disc">Edited</span>' : "")
+       + ic("pencil", 11, "pc-pen")
+       + '</button><button class="pc-part-x" data-partdel="' + p.id + ':' + i + '" aria-label="Remove '
        + esc(pt.name) + '">' + ic("x", 12) + '</button></div>'
        + '<div class="stepper small"><button data-pq="' + p.id + ':' + i + '" data-d="-1" '
        + 'aria-label="Reduce quantity">' + ic("minus", 14) + '</button>'
@@ -3773,11 +3828,21 @@ function openCustomProduct() {
     if (!a) return;
     if (pendingPhoto) {
       var ph = photoById(a, pendingPhoto);
-      pendingPhoto = null;
+      var swap = replacingPart;
+      pendingPhoto = null; replacingPart = null;
       if (ph) {
         if (!ph.parts) ph.parts = [];
-        ph.parts.push({ pn: "", name: n, mat: $("#c-mat").value.trim(),
-                        size: $("#c-size").value.trim(), custom: true, qty: 1 });
+        var made = { pn: "", name: n, mat: $("#c-mat").value.trim(),
+                     size: $("#c-size").value.trim(), custom: true, qty: 1 };
+        var swi = swap && swap.ph === ph.id ? ph.parts.indexOf(swap.ref) : -1;
+        if (swi >= 0) {
+          made.qty = ph.parts[swi].qty || 1;
+          ph.parts[swi] = made;
+          save(); closeSheet(); go("photos");
+          toast("Swapped for a custom item");
+          return;
+        }
+        ph.parts.push(made);
         save();
       }
       closeSheet(); go("photos");
@@ -3789,6 +3854,79 @@ function openCustomProduct() {
     pendingSign = null; save(); closeSheet();
     if (TAB === "parts") { renderRefNote(); renderOrderList(); badges(); } else render();
     toast("Custom item added");
+  });
+}
+
+/* Until now a part pinned to a photo could only have its quantity changed,
+   be removed, or be joined by another: getting the size wrong meant deleting
+   it and starting again. This edits it where it sits — the wording for a
+   custom item, and for a catalogue one the description, material and size
+   too, with the part number kept and the change flagged. Picking a different
+   product altogether is the swap below, which replaces it in place. */
+function openPartEdit(phId, idx) {
+  var a = area(); if (!a) return;
+  var ph = photoById(a, phId);
+  if (!ph || !ph.parts || !ph.parts[idx]) return;
+  var pt = ph.parts[idx], areaId = a.id;
+  var row = pt.pn ? catalogueRow(pt.pn) : null;
+  openSheet('<div class="grab"></div><h2>Edit part</h2>'
+    + '<p class="sheet-lede">'
+    + (pt.pn
+        ? 'Catalogue part <b>' + esc(pt.pn) + '</b>, pinned to ' + esc(photoRef(a, ph))
+          + '. The part number stays with it — if you need a different product, swap it below.'
+        : 'A custom item on ' + esc(photoRef(a, ph)) + ' — the office will quote it.')
+    + '</p>'
+    + '<div class="field"><label class="eyebrow" for="ep-name">Description</label>'
+    + '<input id="ep-name" value="' + esc(pt.name || "") + '" autocomplete="off"></div>'
+    + '<div class="field"><label class="eyebrow" for="ep-size">Size</label>'
+    + '<input id="ep-size" value="' + esc(pt.size || "") + '" placeholder="e.g. 400 x 600mm" autocomplete="off"></div>'
+    + '<div class="field"><label class="eyebrow" for="ep-mat">Material</label>'
+    + '<input id="ep-mat" value="' + esc(pt.mat || "") + '" placeholder="e.g. Rigid PVC" autocomplete="off"></div>'
+    + '<div class="field"><label class="eyebrow" for="ep-qty">Quantity</label>'
+    + '<input id="ep-qty" type="text" inputmode="numeric" pattern="[0-9]*" value="'
+    + (pt.qty || 1) + '" autocomplete="off"></div>'
+    + '<button class="btn btn-primary btn-block" id="savePart">Save changes</button>'
+    + '<button class="btn btn-ghost btn-block" id="swapPart" style="margin-top:8px">'
+    + ic("search", 15) + 'Swap for another product</button>');
+  setTimeout(function () { var e = $("#ep-name"); if (e) { e.focus(); e.select(); } }, 120);
+  document.querySelectorAll("#ep-name,#ep-size,#ep-mat,#ep-qty").forEach(function (inp) {
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); $("#savePart").click(); }
+    });
+  });
+  $("#swapPart").addEventListener("click", function () {
+    pendingSign = null;
+    pendingPhoto = phId;
+    /* Held by identity, not position: if the list shifts under it the part
+       is simply not found and the product is added rather than replacing
+       the wrong one. */
+    replacingPart = { ph: phId, ref: pt };
+    closeSheet(); go("parts");
+  });
+  $("#savePart").addEventListener("click", function () {
+    var nm = $("#ep-name").value.trim();
+    if (!nm) { $("#ep-name").focus(); toast("Give it a short description", true); return; }
+    var ar = areaById(areaId); if (!ar) return;
+    var tph = photoById(ar, phId);
+    if (!tph || !tph.parts || !tph.parts[idx]) { closeSheet(); return; }
+    var tp = tph.parts[idx];
+    var was = { name: tp.name, size: tp.size, mat: tp.mat, qty: tp.qty, amended: tp.amended };
+    var q = parseInt($("#ep-qty").value.replace(/[^0-9]/g, ""), 10);
+    tp.name = nm;
+    tp.size = $("#ep-size").value.trim();
+    tp.mat = $("#ep-mat").value.trim();
+    tp.qty = Math.min(9999, Math.max(1, q > 0 ? q : 1));
+    markAmended(tp);
+    save(); closeSheet(); render();
+    toast("Part updated", { undo: function () {
+      var ur = areaById(areaId); if (!ur) return;
+      var uph = photoById(ur, phId);
+      if (!uph || !uph.parts || !uph.parts[idx]) return;
+      var up = uph.parts[idx];
+      up.name = was.name; up.size = was.size; up.mat = was.mat; up.qty = was.qty;
+      if (was.amended) up.amended = was.amended; else delete up.amended;
+      save(); render(); toast("Change undone");
+    } });
   });
 }
 
@@ -4121,9 +4259,14 @@ function buildWorkbook(photos) {
       for (var ppi = 0; ppi < pps.length; ppi++) {
         var pp = pps[ppi];
         var ppQty = pp.qty > 0 ? pp.qty : 1;
-        push({ loc: a.name, pn: pp.pn || "CUSTOM", desc: pp.name, mat: pp.mat || "", size: pp.size || "",
+        push({ loc: a.name,
+               pn: pp.pn ? pp.pn + (pp.amended ? " (edited)" : "") : "CUSTOM",
+               desc: pp.name, mat: pp.mat || "", size: pp.size || "",
                qty: ppQty, status: "For supply", rawStatus: "", req: "—",
-               note: a.photos[k].note || "", photoRef: photoRef(a, a.photos[k]) });
+               note: [a.photos[k].note || "",
+                      pp.amended ? "Description, material or size changed on site — check against the part number" : ""]
+                 .filter(Boolean).join(" · "),
+               photoRef: photoRef(a, a.photos[k]) });
         totalUnits += ppQty;
       }
     }
@@ -4694,7 +4837,8 @@ function ic(name, size, cls) {
     copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     move:'<path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M17 8l4 4-4 4M7 8L3 12l4 4"/>',
     dup:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2"/>',
-    pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>'
+    pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+    pencil:'<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5z"/>'
   }[name] || "";
   return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
     + 'stroke-linecap="round" stroke-linejoin="round" stroke-width="2" '
@@ -4842,6 +4986,11 @@ document.addEventListener("click", function (e) {
     save(); render();
     return;
   }
+  if ((b = t.closest("[data-partedit]"))) {
+    var peBits = b.dataset.partedit.split(":");
+    openPartEdit(+peBits[0], +peBits[1]);
+    return;
+  }
   if ((b = t.closest("[data-partdel]"))) {
     if (!a) return;
     var ppBits = b.dataset.partdel.split(":");
@@ -4868,7 +5017,10 @@ document.addEventListener("click", function (e) {
     var qi = $("#q"); if (qi) { qi.value = ""; qi.focus(); }
     renderResults(); return;
   }
-  if (t.closest("#clearRef")) { pendingSign = null; pendingPhoto = null; renderRefNote(); return; }
+  if (t.closest("#clearRef")) {
+    pendingSign = null; pendingPhoto = null; replacingPart = null;
+    renderRefNote(); return;
+  }
   if (t.closest("#more")) { shown += LIMIT; renderResults(); return; }
   if (t.closest("#discSw")) { showDisc = !showDisc; shown = LIMIT; renderResults(); return; }
   if ((b = t.closest("[data-gtab]"))) {
