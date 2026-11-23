@@ -20,7 +20,8 @@ const SUITES = [
   ['The paths nothing else walks', 'journeys.js'],
   ['Reported from site', 'site-feedback.js'],
   ['Settling, discontinued lines and unsurveyed areas', 'four-changes.js'],
-  ['Editing a part pinned to a photo', 'edit-photo-parts.js']
+  ['Editing a part pinned to a photo', 'edit-photo-parts.js'],
+  ['Nothing cut off in the PDF', 'pdf-nothing-cut.js']
 ];
 
 function run(file) {

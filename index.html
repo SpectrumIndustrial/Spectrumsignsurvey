@@ -4458,13 +4458,22 @@ function buildPdf() {
     d.line(d.mL, d.y, d.mR, d.y, "DDDDDD", 0.8);
     d.y -= 13;
   }
+  /* A long area name used to run under the status on the right of the bar,
+     or off the end of it. It wraps into whatever the status leaves, and the
+     bar grows to hold it. */
   function areaBanner(name, sub) {
-    pageBreak(46);
-    d.rect(d.mL, d.y - 6, CW, 22, "F4F4F1");
-    d.rect(d.mL, d.y - 6, 3, 22, "111111");
-    d.text(name, d.mL + 10, d.y + 1, 11, true, "111111");
+    var subW = sub ? textWidth(sub, 8, false) + 14 : 0;
+    var nameLines = wrapText(name, 11, true, CW - 20 - subW);
+    if (!nameLines.length) nameLines = [""];
+    var barH = Math.max(22, 8 + nameLines.length * 14);
+    pageBreak(barH + 24);
+    d.rect(d.mL, d.y + 16 - barH, CW, barH, "F4F4F1");
+    d.rect(d.mL, d.y + 16 - barH, 3, barH, "111111");
+    for (var bl = 0; bl < nameLines.length; bl++) {
+      d.text(nameLines[bl], d.mL + 10, d.y + 1 - bl * 14, 11, true, "111111");
+    }
     if (sub) d.text(sub, d.mR - textWidth(sub, 8, false) - 7, d.y + 2, 8, false, "6B6B6B");
-    d.y -= 26;
+    d.y -= barH + 4;
   }
   function tableHead(cols, labels) {
     pageBreak(30);
@@ -4505,6 +4514,42 @@ function buildPdf() {
     d.line(d.mL, d.y + 3, d.mR, d.y + 3, "EDEDED", 0.5);
     d.y -= 4;
   }
+  /* Everything written under one photo in the grid, as [text, bold] lines:
+     the parts first, then its description in full.
+
+     The description used to be cut to the first two lines and each part to
+     its first line, because the grid advanced by a fixed amount per row. It
+     is the one place in the report the description appears, so losing the
+     end of it lost it altogether — the row is measured from its deepest
+     caption instead, and nothing is dropped. The parts are still summarised
+     at two plus a count: unlike the description they are listed in full on
+     the order list in both documents. */
+  function captionBlock(ar, photo, pw) {
+    var out = [], parts = photo.parts || [], i, j, ls;
+    for (i = 0; i < Math.min(2, parts.length); i++) {
+      ls = wrapText(partQtyPrefix(parts[i]) + partLabel(parts[i]), 6.8, true, pw);
+      for (j = 0; j < ls.length; j++) out.push([ls[j], true]);
+    }
+    if (parts.length > 2) {
+      out.push(["+ " + (parts.length - 2) + " more part"
+        + (parts.length === 3 ? "" : "s") + " on the order list", false]);
+    }
+    /* Same reference the spreadsheet uses, so the two documents can be read
+       side by side without translating between them. */
+    ls = wrapText(photoRef(ar, photo) + "  " + (photo.note || "No description"), 6.8, false, pw);
+    for (j = 0; j < ls.length; j++) out.push([ls[j], false]);
+    return out;
+  }
+  /* How deep a row of photos needs to be: the picture, plus the tallest
+     caption among them. Never tighter than the grid always was. */
+  function photoRowHeight(ar, rowPhotos, pw) {
+    var tallest = 0;
+    for (var i = 0; i < rowPhotos.length; i++) {
+      var n = captionBlock(ar, rowPhotos[i], pw).length;
+      if (n > tallest) tallest = n;
+    }
+    return Math.max(pw + 34, pw + 16 + tallest * 9);
+  }
   function statusColour(st) {
     return st === "OK" ? "00843D" : st === "Missing" ? "C8102E"
          : st === "Damaged" ? "B87400" : "9A9A9A";
@@ -4522,35 +4567,57 @@ function buildPdf() {
   var meta = [["Site", siteLine], ["Surveyor", S.by || "—"],
               ["Date", S.date ? new Date(S.date + "T00:00:00").toLocaleDateString("en-GB",
                  { day: "numeric", month: "long", year: "numeric" }) : "—"]];
-  var mx = d.mL, mw = CW / 3;
-  for (var mi = 0; mi < meta.length; mi++) {
-    d.text(meta[mi][0].toUpperCase(), mx, d.y, 7, true, "8A8A8A");
+  /* The site name is often the longest thing on the page — a trading name,
+     an estate and a unit number. It used to be cut to two lines and the rest
+     dropped; now the block grows to hold whichever column is tallest, and
+     only grows past the old height when it has to. */
+  var mx = d.mL, mw = CW / 3, mWrapped = [], mMax = 1, mi, ml;
+  for (mi = 0; mi < meta.length; mi++) {
     var mlines = wrapText(meta[mi][1], 10, true, mw - 10);
-    for (var ml = 0; ml < Math.min(2, mlines.length); ml++) {
-      d.text(mlines[ml], mx, d.y - 13 - ml * 11, 10, true, "1A1A1A");
+    mWrapped.push(mlines);
+    if (mlines.length > mMax) mMax = mlines.length;
+  }
+  for (mi = 0; mi < meta.length; mi++) {
+    d.text(meta[mi][0].toUpperCase(), mx, d.y, 7, true, "8A8A8A");
+    for (ml = 0; ml < mWrapped[mi].length; ml++) {
+      d.text(mWrapped[mi][ml], mx, d.y - 13 - ml * 11, 10, true, "1A1A1A");
     }
     mx += mw;
   }
-  d.y -= 42;
+  /* The whole of this region used to be positioned by fixed drops that
+     assumed one short line each. With a site, an address and both contacts
+     filled in, the summary band — painted after the text — came down on top
+     of the last line or two and hid them. It is laid out from the baseline
+     actually reached instead, so the band always starts below the text. */
+  var lastBase = d.y - 13 - (mMax - 1) * 11;
 
   /* Where the survey was carried out — a captured fix is worth recording on a
-     document that may be read months later. */
+     document that may be read months later. Each entry takes its own line and
+     wraps within the margins: a customer name with an email beside a
+     re-seller's name and number used to run clean off the right of the paper,
+     so the whole re-seller half was missing from the report. */
+  function metaLine(txt) {
+    var ls = wrapText(txt, 8, false, CW);
+    for (var li = 0; li < ls.length; li++) {
+      lastBase -= 10;
+      d.text(ls[li], d.mL, lastBase, 8, false, "6B6B6B");
+    }
+  }
   if (S.addr || S.geo) {
     var loc = [];
     if (S.addr) loc.push(S.addr);
     if (S.geo) loc.push(geoText(S.geo) + " (" + geoSource(S.geo) + ")");
-    d.text(loc.join("   ·   "), d.mL, d.y + 10, 8, false, "6B6B6B");
-    d.y -= 8;
+    metaLine(loc.join("   ·   "));
   }
   if (anyContact()) {
-    var cl = [];
-    if (S.contact || S.contactInfo) cl.push("Customer: " + contactLine(S.contact, S.contactInfo));
+    if (S.contact || S.contactInfo) metaLine("Customer: " + contactLine(S.contact, S.contactInfo));
     if (S.reseller || S.resContact || S.resInfo) {
-      cl.push("Re-seller: " + contactLine(S.reseller, contactLine(S.resContact, S.resInfo)));
+      metaLine("Re-seller: " + contactLine(S.reseller, contactLine(S.resContact, S.resInfo)));
     }
-    d.text(cl.join("   ·   "), d.mL, d.y + 10, 8, false, "6B6B6B");
-    d.y -= 8;
   }
+  /* The band is 52 tall and drawn from d.y - 30, so its top edge is d.y + 22;
+     put that a clear 14pt under the last line of text. */
+  d.y = lastBase - 36;
 
   /* summary band — light fill, dark text, thin rule */
   d.rect(d.mL, d.y - 30, CW, 52, "F4F4F1");
@@ -4678,58 +4745,58 @@ function buildPdf() {
     /* photos for this area */
     if (a.photos.length) {
       d.y -= 4;
-      pageBreak(120);
-      d.text("PHOTOS — " + a.name.toUpperCase(), d.mL, d.y, 7.2, true, "8A8A8A");
-      d.y -= 12;
+      var pw0 = (CW - 20) / 3;
+      /* Measure the first row before the heading is drawn, so the heading is
+         never left on its own at the foot of a page with its photos over the
+         fold. */
+      var phHead = wrapText("PHOTOS — " + a.name.toUpperCase(), 7.2, true, CW);
+      var headH = 12 + Math.max(0, phHead.length - 1) * 9;
+      pageBreak(headH + photoRowHeight(a, a.photos.slice(0, 3), pw0) + 8);
+      for (var hl = 0; hl < phHead.length; hl++) {
+        d.text(phHead[hl], d.mL, d.y - hl * 9, 7.2, true, "8A8A8A");
+      }
+      d.y -= headH;
       /* Square cells, and each photo is scaled to fit inside its cell at its
          own aspect ratio and centred. Portrait and landscape shots both come
          out honest — drawing every photo into one fixed landscape box used to
          stretch portrait ones by nearly 2x. */
-      var px = d.mL, pw = (CW - 20) / 3, ph = pw;
-      for (var phi = 0; phi < a.photos.length; phi++) {
-        if (px + pw > d.mR + 1) { px = d.mL; d.y -= ph + 34; }
-        if (pageBreak(ph + 40)) { px = d.mL; }
-        var ok = false;
-        try {
-          if (isJpegDataUrl(a.photos[phi].src)) {
-            var im = jpegFromDataUrl(a.photos[phi].src);
-            if (im.data[0] === 0xFF && im.data[1] === 0xD8 && im.w && im.h) {
-              var fit = Math.min(pw / im.w, ph / im.h);
-              var iw = im.w * fit, ih = im.h * fit;
-              d.image(im.data, px + (pw - iw) / 2, d.y - ph + (ph - ih) / 2, iw, ih, im.w, im.h);
-              ok = true;
+      var pw = (CW - 20) / 3, ph = pw, PERROW = 3;
+      for (var pr = 0; pr < a.photos.length; pr += PERROW) {
+        var rowPhotos = a.photos.slice(pr, pr + PERROW), blocks = [], tallest = 0, bi;
+        for (bi = 0; bi < rowPhotos.length; bi++) {
+          blocks.push(captionBlock(a, rowPhotos[bi], pw));
+          if (blocks[bi].length > tallest) tallest = blocks[bi].length;
+        }
+        var rowH = Math.max(ph + 34, ph + 16 + tallest * 9);
+        pageBreak(rowH + 8);
+        var px = d.mL;
+        for (bi = 0; bi < rowPhotos.length; bi++) {
+          var pho = rowPhotos[bi], ok = false;
+          try {
+            if (isJpegDataUrl(pho.src)) {
+              var im = jpegFromDataUrl(pho.src);
+              if (im.data[0] === 0xFF && im.data[1] === 0xD8 && im.w && im.h) {
+                var fit = Math.min(pw / im.w, ph / im.h);
+                var iw = im.w * fit, ih = im.h * fit;
+                d.image(im.data, px + (pw - iw) / 2, d.y - ph + (ph - ih) / 2, iw, ih, im.w, im.h);
+                ok = true;
+              }
             }
+          } catch (e) { ok = false; }
+          if (!ok) {
+            d.rect(px, d.y - ph, pw, ph, "F0F0EC");
+            d.text("Photo " + (pr + bi + 1) + " — see app", px + 8, d.y - ph / 2, 7.5, false, "8A8A8A");
           }
-        } catch (e) { ok = false; }
-        if (!ok) {
-          d.rect(px, d.y - ph, pw, ph, "F0F0EC");
-          d.text("Photo " + (phi + 1) + " — see app", px + 8, d.y - ph / 2, 7.5, false, "8A8A8A");
+          var capY = d.y - ph - 9;
+          for (var li2 = 0; li2 < blocks[bi].length; li2++) {
+            d.text(blocks[bi][li2][0], px, capY, 6.8, blocks[bi][li2][1],
+                   blocks[bi][li2][1] ? "1A1A1A" : "6B6B6B");
+            capY -= 9;
+          }
+          px += pw + 10;
         }
-        var capY = d.y - ph - 9;
-        /* Two parts named under the photo, then a count: the caption has to
-           leave room for the description, which is what the office reads. */
-        var thisParts = a.photos[phi].parts || [];
-        for (var tpi = 0; tpi < Math.min(2, thisParts.length); tpi++) {
-          var partLine = wrapText(partQtyPrefix(thisParts[tpi]) + partLabel(thisParts[tpi]),
-                                  6.8, true, pw)[0] || "";
-          d.text(partLine, px, capY, 6.8, true, "1A1A1A");
-          capY -= 9;
-        }
-        if (thisParts.length > 2) {
-          d.text("+ " + (thisParts.length - 2) + " more part"
-            + (thisParts.length === 3 ? "" : "s"), px, capY, 6.8, false, "6B6B6B");
-          capY -= 9;
-        }
-        /* Same reference the spreadsheet uses, so the two documents can be
-           read side by side without translating between them. */
-        var cap = wrapText(photoRef(a, a.photos[phi]) + "  "
-          + (a.photos[phi].note || "No description"), 6.8, false, pw);
-        for (var ci = 0; ci < Math.min(2, cap.length); ci++) {
-          d.text(cap[ci], px, capY - ci * 8, 6.8, false, "6B6B6B");
-        }
-        px += pw + 10;
+        d.y -= rowH;
       }
-      d.y -= ph + 40;
     }
     d.y -= 10;
   }
