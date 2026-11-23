@@ -151,6 +151,25 @@ const LONG = {
      + (hidden.length ? ':\n' + hidden.map(o =>
          `       ${JSON.stringify(o.s.slice(0, 70))}`).join('\n') : ''));
 
+  /* Two strings on top of each other are as unreadable as one under a block,
+     and nothing was watching for it. */
+  let collisions = 0, firstPair = '';
+  lay.pages(buf).forEach(page => {
+    const t = page.filter(o => o.kind === 'text' && o.s.trim());
+    for (let i = 0; i < t.length; i++) {
+      for (let j = i + 1; j < t.length; j++) {
+        const a = t[i], b = t[j];
+        if (!(a.y - a.size * 0.1 < b.y + b.size * 0.72 - 1.5
+              && a.y + a.size * 0.72 > b.y - b.size * 0.1 + 1.5)) continue;
+        if (!(a.x < b.x + b.w - 1.5 && a.x + a.w > b.x + 1.5)) continue;
+        collisions++;
+        if (!firstPair) firstPair = JSON.stringify(a.s.slice(0, 40)) + ' over ' + JSON.stringify(b.s.slice(0, 40));
+      }
+    }
+  });
+  ck(collisions === 0, 'no two lines are printed on top of each other'
+     + (collisions ? ` — ${collisions}, e.g. ${firstPair}` : ''));
+
   const all = lay.ops(buf).filter(o => o.kind === 'text' && o.s.trim());
   const low = all.filter(o => o.y < 40 && !/Spectrum Industrial|Page \d+ of \d+/.test(o.s));
   ck(low.length === 0, 'nothing but the footer sits below the bottom margin'

@@ -43,9 +43,8 @@ const TEXT_OP = /BT\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+rg\s+\/(F[12])\s+([\d.]+)\s+Tf\
 const RECT_OP = /([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+rg\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+re\s+f/;
 const BOTH = new RegExp(TEXT_OP.source + '|' + RECT_OP.source, 'g');
 
-/* Every string and every filled rectangle, in the order they were painted. */
-function ops(buf) {
-  const raw = buf.toString('latin1');
+/* The ops of one content stream, in the order they were painted. */
+function opsIn(raw, page) {
   const out = [];
   let m;
   BOTH.lastIndex = 0;
@@ -53,12 +52,42 @@ function ops(buf) {
     if (m[1]) {
       const s = m[5].replace(/\\([\\()])/g, '$1');
       const bold = m[1] === 'F2', size = +m[2];
-      out.push({ kind: 'text', s, size, bold, x: +m[3], y: +m[4], w: textWidth(s, size, bold) });
+      out.push({ kind: 'text', page, s, size, bold, x: +m[3], y: +m[4], w: textWidth(s, size, bold) });
     } else {
-      out.push({ kind: 'rect', x: +m[9], y: +m[10], w: +m[11], h: +m[12] });
+      out.push({ kind: 'rect', page, x: +m[9], y: +m[10], w: +m[11], h: +m[12] });
     }
   }
   return out;
+}
+
+/* One array of ops per page.
+
+   Page matters: every page starts its coordinates again from the bottom left,
+   so comparing a line on page two against a block on page three says they
+   overlap when they are nowhere near each other. The app writes its content
+   streams uncompressed, so each page's drawing is simply the text between a
+   stream and its endstream. */
+function pages(buf) {
+  const raw = buf.toString('latin1');
+  const out = [];
+  let at = 0, n = 0;
+  for (;;) {
+    const s = raw.indexOf('stream\n', at);
+    if (s < 0) break;
+    const e = raw.indexOf('endstream', s);
+    if (e < 0) break;
+    const body = raw.slice(s + 7, e);
+    at = e + 9;
+    /* image XObjects are streams too, and have no drawing operators in them */
+    if (body.indexOf(' Tj ') < 0 && body.indexOf(' re f') < 0) continue;
+    out.push(opsIn(body, ++n));
+  }
+  return out;
+}
+
+/* Every string and every filled rectangle in the document. */
+function ops(buf) {
+  return [].concat.apply([], pages(buf));
 }
 
 /* Strings whose right-hand end is past the printable width. */
@@ -66,24 +95,25 @@ function overflowing(buf, rightMargin = 555.28) {
   return ops(buf).filter(o => o.kind === 'text' && o.s.trim() && o.x + o.w > rightMargin + 0.5);
 }
 
-/* Strings a filled rectangle was painted over afterwards — present in the
-   file, invisible on the page. A little slack at the baseline, since a fill
-   that just touches the descender still reads fine. */
+/* Strings a filled rectangle was painted over afterwards, on the same page —
+   present in the file, invisible on the page. A little slack at the baseline,
+   since a fill that only touches a descender still reads fine. */
 function buried(buf) {
-  const all = ops(buf);
   const out = [];
-  for (let i = 0; i < all.length; i++) {
-    const t = all[i];
-    if (t.kind !== 'text' || !t.s.trim()) continue;
-    for (let j = i + 1; j < all.length; j++) {
-      const r = all[j];
-      if (r.kind !== 'rect') continue;
-      const topOfText = t.y + t.size * 0.72, botOfText = t.y - t.size * 0.1;
-      const overlapsY = r.y < topOfText - 1 && r.y + r.h > botOfText + 1;
-      const overlapsX = r.x < t.x + t.w - 1 && r.x + r.w > t.x + 1;
-      if (overlapsY && overlapsX) { out.push(t); break; }
+  pages(buf).forEach(all => {
+    for (let i = 0; i < all.length; i++) {
+      const t = all[i];
+      if (t.kind !== 'text' || !t.s.trim()) continue;
+      for (let j = i + 1; j < all.length; j++) {
+        const r = all[j];
+        if (r.kind !== 'rect') continue;
+        const topOfText = t.y + t.size * 0.72, botOfText = t.y - t.size * 0.1;
+        const overlapsY = r.y < topOfText - 1 && r.y + r.h > botOfText + 1;
+        const overlapsX = r.x < t.x + t.w - 1 && r.x + r.w > t.x + 1;
+        if (overlapsY && overlapsX) { out.push(t); break; }
+      }
     }
-  }
+  });
   return out;
 }
 
@@ -98,4 +128,4 @@ function howMuchGotThrough(buf, wanted) {
   return { whole: false, got, of: want.length, from: want.slice(Math.max(0, got - 12), got + 30) };
 }
 
-module.exports = { ops, overflowing, buried, howMuchGotThrough, asDrawn, textWidth };
+module.exports = { ops, pages, overflowing, buried, howMuchGotThrough, asDrawn, textWidth };
