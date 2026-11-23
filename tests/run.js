@@ -18,7 +18,8 @@ const SUITES = [
   ['Survey backup and restore', 'backup.js'],
   ['Awkward text in and out', 'awkward-input.js'],
   ['The paths nothing else walks', 'journeys.js'],
-  ['Reported from site', 'site-feedback.js']
+  ['Reported from site', 'site-feedback.js'],
+  ['Settling, discontinued lines and unsurveyed areas', 'four-changes.js']
 ];
 
 function run(file) {

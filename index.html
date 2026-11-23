@@ -220,6 +220,9 @@ body{overflow:hidden}
 .fchip svg{width:13px;height:13px;stroke-width:2.3}
 .count{font-size:12.5px;color:var(--ink-45);padding:10px 2px 8px;font-weight:500}
 .count b{color:var(--ink);font-weight:700}
+.count .discsw{display:block;margin-top:4px;background:none;border:0;padding:0;
+  font:inherit;color:var(--brand);font-weight:600;text-decoration:underline;
+  text-underline-offset:2px;min-height:28px;text-align:left}
 
 /* ---------- product rows ---------- */
 .prow{
@@ -2105,17 +2108,31 @@ function areaStats(a) {
   }
   return st;
 }
-function surveyStats() {
+/* An area where not one sign has been given a status was not surveyed — it is
+   somewhere a few photos, parts and a description were recorded for the
+   customer. Counting its signs made the report say things like "0 of 9
+   checked · 0 missing", which reads as a finding when it is only an empty
+   row, and it dragged the site's checked figure down with signs nobody ever
+   intended to check. So the report is built with reportOnly set, and those
+   areas sit out of the compliance figures and the sign tables. Everything
+   else about them — photos, products, quantities, notes — appears in full, in
+   both exports, exactly as before. On screen the figures stay as they were:
+   while you are working, "0 of 9 checked" is the whole point. */
+function isAssessed(a) { return areaStats(a).done > 0; }
+function surveyStats(reportOnly) {
   var t = { areas:S.areas.length, areasDone:0, signs:0, done:0, ok:0, missing:0, damaged:0, na:0,
-            statOK:0, statBad:0, statTotal:0, lines:0, units:0, photos:0 };
+            statOK:0, statBad:0, statTotal:0, lines:0, units:0, photos:0,
+            surveyed:0, refAreas:0 };
   for (var i = 0; i < S.areas.length; i++) {
     var a = S.areas[i], st = areaStats(a);
     if (a.done) t.areasDone++;
+    t.lines += a.order.length; t.photos += a.photos.length;
+    for (var j = 0; j < a.order.length; j++) t.units += a.order[j].qty;
+    if (st.done) t.surveyed++; else t.refAreas++;
+    if (reportOnly && !st.done) continue;
     t.signs += st.total; t.done += st.done; t.ok += st.ok; t.missing += st.missing;
     t.damaged += st.damaged; t.na += st.na;
     t.statOK += st.statOK; t.statBad += st.statBad; t.statTotal += st.statTotal;
-    t.lines += a.order.length; t.photos += a.photos.length;
-    for (var j = 0; j < a.order.length; j++) t.units += a.order[j].qty;
   }
   t.assessed = t.statOK + t.statBad;
   t.pct = t.assessed ? Math.round(t.statOK / t.assessed * 100) : null;
@@ -2269,6 +2286,15 @@ function renderArea(a) {
     h += empty("sign", "No signs yet", "Add the signs that apply to this area.");
   } else {
     for (var i = 0; i < a.signs.length; i++) h += signCard(a.signs[i], i);
+    /* A walk-round is a hunt for what's wrong: on most sites most signs are
+       there and fine. Recording the exceptions and settling the rest in one
+       tap is the way round it actually happens, rather than tapping OK nine
+       times an area. */
+    var left = st.total - st.done;
+    if (left) {
+      h += '<button class="btn btn-ghost btn-block" id="allOk" style="margin-bottom:8px">'
+         + ic("check", 16) + 'Mark the remaining ' + left + ' as OK</button>';
+    }
   }
   h += '<button class="btn btn-ghost btn-block" id="addSign">' + ic("plus") + 'Add sign</button>';
 
@@ -2326,7 +2352,10 @@ function signCard(s, idx) {
     +     '<div class="item-name">' + esc(s.name) + '</div>'
     +     '<div class="item-meta"><span class="tag ' + (s.statutory ? 't-stat">Statutory' : 't-rec">Advisory') + '</span>'
     +       '<span>' + esc(CATNAME[s.cat]) + '</span></div>'
-    +     (s.legal ? '<div class="legal">' + esc(s.legal) + '</div>' : "")
+    /* The regulation each sign sits under is reference, not something you act
+       on while deciding OK or Missing. It stays on both exports and in the
+       Guide's own list; off the card, every sign is a line shorter and the
+       status buttons sit higher up the screen. */
     +   '</div>'
     +   '<button class="del faint" data-delsign="' + s.id + '" aria-label="Remove ' + esc(s.name) + '">' + ic("bin", 14) + '</button>'
     + '</div>'
@@ -2391,6 +2420,12 @@ function oline(a, j) {
 
 /* ================= PARTS ================= */
 var Q = "", fMat = "", fSize = "", LIMIT = 24, shown = LIMIT, pendingSign = null, pendingPhoto = null;
+/* Discontinued lines were listed alongside everything else with a small
+   label, which is easy to miss on a phone in a plant room — and ordering one
+   costs the office a phone call and the customer a delay. They are left out
+   of the results unless asked for, and the count below the search says how
+   many are being held back so nothing is hidden silently. */
+var showDisc = false;
 
 function photoById(a, id) {
   if (!a) return null;
@@ -2424,6 +2459,7 @@ function matches(collect) {
   var skuMode = nT === 1 && isSku(q);
   var exact = [], starts = [];
 
+  var disc = 0;
   for (i = 0; i < PRD.length; i++) {
     p = PRD[i];
     if (mi >= 0 && p[2] !== mi) continue;
@@ -2433,8 +2469,13 @@ function matches(collect) {
       ok = false;
       /* part number / SKU match first */
       if (skuMode) {
+        /* Someone typing a full part number knows what they are after, so a
+           discontinued one is shown rather than held back. */
         if (pn === q) { exact.push(i); count++; continue; }
-        if (pn.indexOf(q) === 0) { starts.push(i); count++; continue; }
+        if (pn.indexOf(q) === 0) {
+          if (p[4]) { disc++; if (!showDisc) continue; }
+          starts.push(i); count++; continue;
+        }
         if (pn.indexOf(q) >= 0) ok = true;
       }
       if (!ok) {
@@ -2445,13 +2486,14 @@ function matches(collect) {
       }
       if (!ok) continue;
     }
+    if (p[4]) { disc++; if (!showDisc) continue; }
     count++;
     if (ids.length < cap) ids.push(i);
   }
   if (skuMode && (exact.length || starts.length)) {
     ids = exact.concat(starts, ids).slice(0, cap || 0);
   }
-  return { count: count, ids: ids };
+  return { count: count, ids: ids, disc: disc };
 }
 
 function generalTip(a) {
@@ -2536,7 +2578,14 @@ function renderResults() {
   if (!rEl) return;
   if (clr) clr.hidden = !Q;
   cEl.innerHTML = '<b>' + res.count.toLocaleString("en-GB") + '</b> '
-    + (res.count === 1 ? "product" : "products") + (Q || fMat || fSize ? " found" : " available");
+    + (res.count === 1 ? "product" : "products") + (Q || fMat || fSize ? " found" : " available")
+    + (res.disc
+        ? '<button class="discsw" id="discSw">'
+          + (showDisc
+              ? 'Hide ' + res.disc + ' discontinued ' + (res.disc === 1 ? "line" : "lines")
+              : res.disc + ' discontinued ' + (res.disc === 1 ? "line" : "lines") + ' hidden — show')
+          + '</button>'
+        : "");
   if (!res.count) {
     h = empty("search", "No products match",
         "Try fewer words, a part number, or clear the filters.")
@@ -2719,7 +2768,7 @@ function renderPhotos() {
 
 /* ================= REPORT ================= */
 function renderReport() {
-  var t = surveyStats();
+  var t = surveyStats(true);
   var h = '<h1 style="margin:2px 0 4px">Report</h1>' + savedLine();
   if (!S.areas.length) {
     h += empty("file", "Nothing to report yet",
@@ -2745,7 +2794,15 @@ function renderReport() {
   h += '<div class="card totals"><div class="eyebrow" style="margin-bottom:9px">Totals</div>'
      + '<div class="totalrow">'
      + tot(t.areas, "areas") + tot(t.lines, "products") + tot(t.units, "units") + tot(t.photos, "photos")
-     + '</div></div>';
+     + '</div>'
+     + (t.refAreas
+         ? '<p class="hint" style="margin:10px 0 0">' + t.refAreas
+           + (t.refAreas === 1 ? ' area has' : ' areas have') + ' no signs checked, so '
+           + (t.refAreas === 1 ? 'it is' : 'they are')
+           + ' left out of the figures above. Photos, products and notes from '
+           + (t.refAreas === 1 ? 'it' : 'them') + ' are still in both exports.</p>'
+         : "")
+     + '</div>';
 
   /* per-area breakdown */
   h += '<div class="sectionhead"><span class="eyebrow">By area</span><span class="line"></span></div>';
@@ -2754,10 +2811,15 @@ function renderReport() {
     h += '<button class="areacard compact' + (a.done ? " done" : "") + '" data-open="' + a.id + '">'
        + '<div class="areacard-main"><div class="areacard-name">' + esc(a.name)
        + (a.done ? '<span class="pill done">' + ic("check", 12) + 'Complete</span>' : "") + '</div>'
-       + '<div class="areacard-meta">' + st.done + ' of ' + st.total + ' checked'
-       + (st.missing ? ' · ' + st.missing + ' missing' : "")
-       + (st.damaged ? ' · ' + st.damaged + ' damaged' : "")
+       + '<div class="areacard-meta">'
+       + (st.done
+           ? st.done + ' of ' + st.total + ' checked'
+             + (st.missing ? ' · ' + st.missing + ' missing' : "")
+             + (st.damaged ? ' · ' + st.damaged + ' damaged' : "")
+           : 'No signs checked')
        + (a.order.length ? ' · ' + a.order.length + ' product' + (a.order.length > 1 ? "s" : "") : "")
+       + (!st.done && a.photos.length
+           ? ' · ' + a.photos.length + ' photo' + (a.photos.length > 1 ? "s" : "") : "")
        + '</div></div>' + ic("chev") + '</button>';
   }
 
@@ -4018,6 +4080,9 @@ function buildWorkbook(photos) {
 
   for (i = 0; i < S.areas.length; i++) {
     var a = S.areas[i];
+    /* Signs in an area nobody checked are not "not yet checked" — the area
+       was never a sign survey. Products chosen in it are still listed. */
+    var aSurveyed = isAssessed(a);
 
     for (j = 0; j < a.signs.length; j++) {
       var s = a.signs[j], prods = [];
@@ -4035,7 +4100,7 @@ function buildWorkbook(photos) {
         continue;
       }
       if (s.st === "OK" || s.st === "N/A") { settled++; continue; }
-      if (!s.st) { unchecked++; continue; }
+      if (!s.st) { if (aSurveyed) unchecked++; continue; }
       /* Missing or damaged with nothing specified — the office quotes this one. */
       push({ loc: a.name, pn: "—", desc: s.name, mat: "", size: "", qty: s.qty || 1,
              status: s.st, rawStatus: s.st,
@@ -4066,7 +4131,7 @@ function buildWorkbook(photos) {
 
   /* ---- lay the sheet out ---- */
   var COLS = 10, LAST = colName(COLS);
-  var t = surveyStats(), rows = [];
+  var t = surveyStats(true), rows = [];
   rows.push([{ v: "SIGNAGE SURVEY — ORDER & ACTION LIST", s: T }]);
   rows.push([{ v: "Spectrum Industrial · part of Centurion Europe", s: MUT }]);
   rows.push([]);
@@ -4099,6 +4164,12 @@ function buildWorkbook(photos) {
   }
   wideRow("This list", items.length + (items.length === 1 ? " line" : " lines")
     + " · " + totalUnits + (totalUnits === 1 ? " unit" : " units"));
+  if (t.refAreas) {
+    wideRow("Areas", { v: (t.surveyed
+        ? t.surveyed + (t.surveyed === 1 ? " area" : " areas") + " sign-surveyed · "
+        : "No area sign-surveyed · ")
+      + t.refAreas + " recorded for photos and products only", s: MUT });
+  }
   var caveats = [];
   if (settled) caveats.push(settled + " sign" + (settled === 1 ? "" : "s") + " already in place or not applicable");
   if (unchecked) caveats.push(unchecked + " not yet checked");
@@ -4222,7 +4293,7 @@ function isJpegDataUrl(u) {
 }
 function buildPdf() {
   var d = new PdfDoc({ margin: 40, marginTop: 40, marginBottom: 46 });
-  var t = surveyStats();
+  var t = surveyStats(true);
   var CW = d.mR - d.mL;
 
   function header() {
@@ -4356,6 +4427,24 @@ function buildPdf() {
   }
   d.y -= 48;
 
+  /* Say plainly which areas the percentage was worked out from, so a reader
+     counting areas in the body against the figures above is not left guessing. */
+  if (t.refAreas) {
+    var rl = wrapText(t.refAreas + (t.refAreas === 1 ? " area is" : " areas are")
+      + " recorded for photos and products only, with no signs checked, so "
+      + (t.refAreas === 1 ? "it sits" : "they sit")
+      + " outside the figures above. "
+      + (t.surveyed
+          ? t.surveyed + (t.surveyed === 1 ? " area was" : " areas were") + " sign-surveyed."
+          : "No area on this visit was sign-surveyed."), 7.5, false, CW);
+    for (var rli = 0; rli < rl.length; rli++) {
+      pageBreak(12);
+      d.text(rl[rli], d.mL, d.y, 7.5, false, "8A8A8A");
+      d.y -= 9;
+    }
+    d.y -= 6;
+  }
+
   /* priority gaps */
   var gaps = [];
   for (var gi = 0; gi < S.areas.length; gi++) {
@@ -4382,8 +4471,14 @@ function buildPdf() {
   /* per area */
   for (var ai = 0; ai < S.areas.length; ai++) {
     var a = S.areas[ai], ast = areaStats(a);
-    areaBanner(a.name, (a.done ? "Complete" : "In progress") + "  ·  "
-      + ast.done + "/" + ast.total + " checked");
+    /* Nothing checked here, so this was never a sign survey: the area is in
+       the report for its photos, products and description, and a row per sign
+       reading "Not checked" would only read as a finding. Signs that had a
+       product chosen against them are still listed — that is a real request. */
+    var surveyed = ast.done > 0;
+    areaBanner(a.name, surveyed
+      ? (a.done ? "Complete" : "In progress") + "  ·  " + ast.done + "/" + ast.total + " checked"
+      : "Photos and products");
     if (a.note) {
       var nl = wrapText("Area note: " + a.note, 8.2, false, CW - 14);
       pageBreak(nl.length * 10 + 12);
@@ -4392,24 +4487,35 @@ function buildPdf() {
     }
     var ac = [168, 58, 132, 30, 127];
     var alab = ["Sign", "Status", "Product / SKU", "Qty", "Notes"];
-    tableHead(ac, alab);
     var rep = function () { tableHead(ac, alab); };
+    var loose2 = [];
+    for (var li = 0; li < a.order.length; li++) if (!a.order[li].signId) loose2.push(a.order[li]);
+    /* Which signs earn a row: all of them in a surveyed area, and in an
+       unsurveyed one only those a product was chosen against. */
+    var srows = [];
+    for (var si = 0; si < a.signs.length; si++) {
+      var sg0 = a.signs[si], ps0 = [];
+      for (var pi2 = 0; pi2 < a.order.length; pi2++) if (a.order[pi2].signId === sg0.id) ps0.push(a.order[pi2]);
+      if (surveyed || ps0.length) srows.push([sg0, ps0]);
+    }
 
-    if (!a.signs.length && !a.order.length) {
+    if (srows.length || loose2.length) tableHead(ac, alab);
+    else if (!a.photos.length) {
+      tableHead(ac, alab);
       d.text("Nothing recorded in this area.", d.mL, d.y, 8.2, false, "9A9A9A");
       d.y -= 16;
     }
-    for (var si = 0; si < a.signs.length; si++) {
-      var sg = a.signs[si], ps = [];
-      for (var pi2 = 0; pi2 < a.order.length; pi2++) if (a.order[pi2].signId === sg.id) ps.push(a.order[pi2]);
+    for (var sj = 0; sj < srows.length; sj++) {
+      var sg = srows[sj][0], ps = srows[sj][1];
+      var sgSt = sg.st || (surveyed ? "Not checked" : "For supply");
       if (!ps.length) {
-        tableRow(ac, [sg.name, sg.st || "Not checked", "", "", sg.note || ""],
+        tableRow(ac, [sg.name, sgSt, "", "", sg.note || ""],
           { boldFirst: true, colors: ["1A1A1A", statusColour(sg.st), "1A1A1A", "1A1A1A", "6B6B6B"],
             bold: [true, true, false, false, false], chipFill: statusChip(sg.st), chipCol: 1, repeat: rep });
       } else {
         for (var pk = 0; pk < ps.length; pk++) {
           tableRow(ac,
-            [pk === 0 ? sg.name : "", pk === 0 ? (sg.st || "Not checked") : "",
+            [pk === 0 ? sg.name : "", pk === 0 ? sgSt : "",
              (ps[pk].pn || "CUSTOM") + "  " + ps[pk].name, String(ps[pk].qty),
              [pk === 0 ? sg.note : "", ps[pk].note].filter(Boolean).join(" / ")],
             { boldFirst: true, colors: ["1A1A1A", statusColour(sg.st), "1A1A1A", "1A1A1A", "6B6B6B"],
@@ -4418,8 +4524,6 @@ function buildPdf() {
         }
       }
     }
-    var loose2 = [];
-    for (var li = 0; li < a.order.length; li++) if (!a.order[li].signId) loose2.push(a.order[li]);
     for (var lk = 0; lk < loose2.length; lk++) {
       tableRow(ac, [lk === 0 ? "Additional products" : "", "",
                     (loose2[lk].pn || "CUSTOM") + "  " + loose2[lk].name,
@@ -4611,6 +4715,24 @@ document.addEventListener("click", function (e) {
   if (t.closest("#addArea") || t.closest(".tipbtn")) { openAddArea(); return; }
   if ((b = t.closest("[data-preset]"))) { createArea(+b.dataset.preset); return; }
   if (t.closest("#renameArea")) { openAreaMenu(); return; }
+  if (t.closest("#allOk")) {
+    if (!a) return;
+    var wasAreaId = a.id, before = [], ni;
+    for (ni = 0; ni < a.signs.length; ni++) {
+      if (!a.signs[ni].st) { before.push(a.signs[ni].id); a.signs[ni].st = "OK"; }
+    }
+    if (!before.length) return;
+    save(); render();
+    toast(before.length + (before.length === 1 ? " sign" : " signs") + " marked OK", {
+      undo: function () {
+        var ar = areaById(wasAreaId); if (!ar) return;
+        for (var ui = 0; ui < ar.signs.length; ui++) {
+          if (before.indexOf(ar.signs[ui].id) >= 0) ar.signs[ui].st = "";
+        }
+        save(); render(); toast("Put back as not checked");
+      } });
+    return;
+  }
   if (t.closest("#addSign")) { openAddSign(); return; }
   if ((b = t.closest("[data-addsign]"))) {
     if (!a) return;
@@ -4748,6 +4870,7 @@ document.addEventListener("click", function (e) {
   }
   if (t.closest("#clearRef")) { pendingSign = null; pendingPhoto = null; renderRefNote(); return; }
   if (t.closest("#more")) { shown += LIMIT; renderResults(); return; }
+  if (t.closest("#discSw")) { showDisc = !showDisc; shown = LIMIT; renderResults(); return; }
   if ((b = t.closest("[data-gtab]"))) {
     GTAB = b.dataset.gtab;
     renderGuide();
