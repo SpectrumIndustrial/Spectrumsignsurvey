@@ -23,7 +23,8 @@ const SUITES = [
   ['Editing a part pinned to a photo', 'edit-photo-parts.js'],
   ['Nothing cut off in the PDF', 'pdf-nothing-cut.js'],
   ['Naming areas, the spreadsheet columns and re-seller codes', 'five-changes.js'],
-  ['Markup, ids, tap targets and overflow', 'markup.js']
+  ['Markup, ids, tap targets and overflow', 'markup.js'],
+  ['Nothing invisible, in either theme', 'contrast.js']
 ];
 
 function run(file) {

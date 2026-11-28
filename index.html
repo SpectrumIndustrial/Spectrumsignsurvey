@@ -27,17 +27,34 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#0D0D0D; --ink-70:#4A4A4A; --ink-45:#7C7C7C;
-  --paper:#FAFAF8; --card:#FFFFFF; --rule:#E4E4DF; --rule-2:#EFEFEA;
-  --red:#E40613; --red-dark:#B8040F; --red-tint:#FDEBEC;
-  --green:#00843D; --green-tint:#E6F2EB;
-  --amber:#E08A00; --amber-tint:#FDF1DE;
-  --blue:#005EB8;
-  --chrome:#0D0D0D; /* fixed dark "always-on" surface for topbar, kpi, primary chips —
-                        decoupled from --ink so it survives a dark-mode --ink flip */
-  --shadow:0 1px 2px rgba(13,13,13,.06),0 4px 16px rgba(13,13,13,.05);
-  --shadow-lg:0 8px 40px rgba(13,13,13,.16);
-  --nav-h:60px;
+  --ink:#1d1d1f; --ink-70:#424245; --ink-45:#5f5f66;
+  --paper:#f5f5f7; --card:#ffffff; --rule:#d2d2d7; --rule-2:#e8e8ed;
+  --red:#e30613; --red-dark:#b8040f; --red-tint:#fdecec;
+  --green:#008a3e; --green-tint:#e8f5ee;
+  --amber:#d97706; --amber-tint:#fdf2e3;
+  --blue:#0071e3;
+  /* Actions are blue, never the brand red: red in this app means a sign is
+     missing, and a colour that carries a meaning cannot also mean "tap me". */
+  --link:#0066cc;
+  /* FILLS, as opposed to the colours above. The ones above are tints: they
+     are the colour of WORDS and are lightened in the dark so they read on
+     black. A fill is the opposite job — words sit on top of it — so a fill
+     has to stay dark enough to carry white, and these do not change with the
+     theme. Mixing the two up is how "Missing" ended up as white on a pale
+     coral. Every one is measured against the text it carries:
+       white on blue 4.70:1   white on red 4.88:1   white on green 5.47:1
+       white on grey 6.33:1   black on amber 7.97:1
+     Amber alone takes black, which is also how an amber sign is printed, and
+     is the one fill kept bright: a dark amber under dark words goes brown. */
+  --blue-fill:#0071e3; --red-fill:#e30613; --green-fill:#007a36;
+  --amber-fill:#f0a30a; --grey-fill:#5f5f66;
+  --on-amber:#1d1d1f;
+  --chrome:#1d1d1f; /* the one always-dark surface: the compliance panel and
+                        the toast, which stay dark in either mode */
+  --shadow:0 2px 10px rgba(0,0,0,.05);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.2);
+  /* the floating bar's height plus the gap it leaves at the bottom */
+  --nav-h:80px;
   --sys:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
 }
@@ -52,9 +69,9 @@ button{background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:tr
 input,textarea{-webkit-appearance:none;appearance:none}
 
 /* ---------- type roles ---------- */
-.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-45)}
+.eyebrow{font-size:12px;font-weight:500;letter-spacing:0;color:var(--ink-45)}
 .mono{font-family:var(--mono);font-variant-ligatures:none}
-h1{font-size:26px;font-weight:800;letter-spacing:-.022em;line-height:1.15}
+h1{font-size:26px;font-weight:600;letter-spacing:-.021em;line-height:1.14}
 h2{font-size:17px;font-weight:700;letter-spacing:-.012em}
 
 /* ---------- app frame ---------- */
@@ -67,49 +84,63 @@ body{overflow:hidden}
 .scroller{flex:1 1 auto;order:2;overflow-y:auto;-webkit-overflow-scrolling:touch;
   overscroll-behavior:contain}
 .topbar{
-  flex:none;order:1;z-index:40;background:var(--chrome);color:#fff;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  flex:none;order:1;z-index:40;color:var(--ink);
+  background:rgba(251,251,253,.8);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.09);
+  padding:calc(8px + env(safe-area-inset-top)) 18px 8px;
   display:flex;align-items:center;gap:12px;
 }
 .brandmark{display:flex;align-items:center;gap:9px;min-width:0}
 .brandmark img{height:22px;width:auto;display:block}
-.brandmark .div{width:1px;height:18px;background:rgba(255,255,255,.24)}
-.brandmark .ctx{font-size:12.5px;font-weight:600;color:rgba(255,255,255,.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* These were written for a black bar. The bar is light now, so they take the
+   page's own ink rather than white, in both modes. */
+.brandmark .div{width:1px;height:18px;background:var(--rule)}
+.brandmark .ctx{font-size:13px;font-weight:500;letter-spacing:-.01em;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar .spacer{flex:1}
 .iconbtn{
-  width:36px;height:36px;border-radius:9px;display:grid;place-items:center;
-  color:rgba(255,255,255,.9);transition:background .15s;flex:none
+  width:36px;height:36px;border-radius:980px;display:grid;place-items:center;
+  color:var(--ink-70);transition:background .15s;flex:none
 }
-.iconbtn:hover,.iconbtn:focus{background:rgba(255,255,255,.14)}
+.iconbtn:hover,.iconbtn:focus{background:rgba(0,0,0,.06)}
 @supports selector(:focus-visible){.iconbtn:focus{background:none}
-.iconbtn:hover,.iconbtn:focus-visible{background:rgba(255,255,255,.14)}}
-.screen{padding:18px 16px 24px;display:none}
+.iconbtn:hover,.iconbtn:focus-visible{background:rgba(0,0,0,.06)}}
+.screen{padding:20px 16px 112px;display:none}
 .screen.on{display:block;animation:fade .18s ease}
 @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 
 /* ---------- bottom nav ---------- */
+/* A bar that floats clear of the edge, with the page passing under it, is
+   what tells you at a glance this is an app on a phone rather than a page in
+   a browser. It is fixed rather than a flex item, so .screen carries the
+   bottom padding that keeps content from ending underneath it. */
 .nav{
-  flex:none;order:3;z-index:50;background:rgba(255,255,255,.94);
-  backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);
-  border-top:1px solid var(--rule);
+  position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));
+  z-index:60;border-radius:980px;overflow:hidden;
+  background:rgba(251,251,253,.72);
+  backdrop-filter:saturate(180%) blur(28px);-webkit-backdrop-filter:saturate(180%) blur(28px);
   display:grid;grid-template-columns:repeat(5,1fr);
-  padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 8px 30px rgba(0,0,0,.14),
+             0 0 0 1px rgba(0,0,0,.06);
 }
 .nav button{
-  padding:8px 4px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;
-  color:var(--ink-45);font-size:10.5px;font-weight:600;letter-spacing:.02em;
-  position:relative;transition:color .15s;min-height:56px;justify-content:center;
+  padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--ink-45);font-size:10px;font-weight:500;letter-spacing:0;border-radius:980px;
+  position:relative;transition:color .15s;min-height:58px;justify-content:center;
 }
 .nav button svg{width:21px;height:21px;stroke-width:1.9}
-.nav button.on{color:var(--red)}
-.nav button.on::before{
-  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:26px;height:2.5px;background:var(--red);border-radius:0 0 3px 3px
+.nav button svg{width:21px;height:21px;stroke-width:1.9}
+.nav button.on{color:var(--link)}
+/* the place is marked by a filled pill behind the tab, not a rule above it */
+.nav button.on::after{
+  content:"";position:absolute;inset:5px 7px;border-radius:980px;
+  background:rgba(0,113,227,.12);z-index:-1
 }
 [hidden]{display:none!important}
 .nav .badge{
   position:absolute;top:5px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;
-  background:var(--red);color:#fff;border-radius:8px;font-size:10px;font-weight:700;
+  background:var(--red-fill);color:#fff;border-radius:8px;font-size:10px;font-weight:700;
   display:grid;place-items:center;line-height:1
 }
 
@@ -118,7 +149,7 @@ body{overflow:hidden}
 .iso svg{width:100%;height:100%;display:block}
 
 /* ---------- cards ---------- */
-.card{background:var(--card);border:1px solid var(--rule);border-radius:13px;box-shadow:var(--shadow)}
+.card{background:var(--card);border-radius:22px}
 .zone-head{
   display:flex;align-items:center;gap:9px;margin:22px 0 9px;
 }
@@ -126,9 +157,9 @@ body{overflow:hidden}
 .zone-head .line{flex:1;height:1px;background:var(--rule)}
 
 .item{
-  background:var(--card);border:1px solid var(--rule);border-radius:16px;
-  padding:12px 13px 10px;margin-bottom:8px;box-shadow:var(--shadow);
-  border-left:3px solid transparent;transition:border-color .18s,box-shadow .18s
+  background:var(--card);border-radius:20px;
+  padding:14px 15px 11px;margin-bottom:9px;
+  border-left:3px solid transparent;transition:border-color .18s
 }
 .item[data-s="OK"]{border-left-color:var(--green)}
 .item[data-s="Missing"]{border-left-color:var(--red)}
@@ -150,27 +181,29 @@ body{overflow:hidden}
 /* ---------- status chips ---------- */
 .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
 .chip{
-  padding:10px 4px;border-radius:9px;border:1.5px solid var(--rule);background:#fff;
-  font-size:12px;font-weight:650;color:var(--ink-70);text-align:center;
-  transition:all .14s;min-height:42px
+  padding:10px 4px;border-radius:980px;border:1px solid var(--rule);background:var(--card);
+  font-size:14px;font-weight:500;color:var(--ink-70);text-align:center;
+  transition:all .14s;min-height:44px
 }
 .chip:active{transform:scale(.96)}
 .chip[aria-pressed="true"]{color:#fff;border-color:transparent}
-.chip.ok[aria-pressed="true"]{background:var(--green)}
-.chip.miss[aria-pressed="true"]{background:var(--red)}
-.chip.dam[aria-pressed="true"]{background:var(--amber)}
-.chip.na[aria-pressed="true"]{background:var(--ink-45)}
+.chip.ok[aria-pressed="true"]{background:var(--green-fill)}
+.chip.miss[aria-pressed="true"]{background:var(--red-fill)}
+.chip.dam[aria-pressed="true"]{background:var(--amber-fill);color:var(--on-amber)}
+.chip.na[aria-pressed="true"]{background:var(--grey-fill)}
 
 .followup{
   margin-top:10px;padding-top:10px;border-top:1px dashed var(--rule);
   display:flex;gap:8px;align-items:center;flex-wrap:wrap
 }
 .btn-find{
-  background:var(--chrome);color:#fff;padding:9px 14px;border-radius:8px;
-  font-size:13px;font-weight:650;display:inline-flex;align-items:center;gap:7px;
-  transition:background .15s
+  background:var(--blue-fill);color:#fff;padding:10px 16px;border-radius:980px;
+  font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:7px;
+  transition:filter .15s
 }
-.btn-find:hover{background:var(--red)}
+/* hover used to turn this red, from when red was the brand's action colour.
+   Red now means a sign is missing, so it cannot also mean "you are over it". */
+.btn-find:hover{filter:brightness(1.08)}
 .btn-find svg{width:15px;height:15px;stroke-width:2.2}
 .linked{
   font-size:12px;color:var(--green);font-weight:600;display:inline-flex;align-items:center;gap:5px
@@ -179,18 +212,18 @@ body{overflow:hidden}
 .qtybox{display:flex;align-items:center;gap:7px;margin-left:auto}
 .qtybox label{font-size:11.5px;color:var(--ink-45);font-weight:600}
 .qtybox input{
-  width:52px;padding:6px 8px;border:1.5px solid var(--rule);border-radius:7px;
-  text-align:center;font-weight:650;font-size:16px
+  width:54px;padding:7px 8px;border:1px solid var(--rule);border-radius:10px;
+  text-align:center;font-weight:500;font-size:16px;background:var(--card)
 }
-.qtybox input:focus{outline:none;border-color:var(--ink)}
+.qtybox input:focus{outline:none;border-color:var(--blue)}
 /* Every focusable text field is 16px on purpose: iOS Safari auto-zooms the
    page when you focus an input smaller than that, and never zooms back out.
    Don't shrink these below 16px. */
 .note-in{
-  width:100%;margin-top:9px;padding:9px 11px;border:1.5px solid var(--rule);
-  border-radius:9px;font-size:16px;resize:vertical;min-height:38px;background:#FCFCFA
+  width:100%;margin-top:9px;padding:11px 13px;border:1px solid var(--rule);
+  border-radius:14px;font-size:16px;resize:vertical;min-height:38px;background:var(--card)
 }
-.note-in:focus{outline:none;border-color:var(--ink);background:#fff}
+.note-in:focus{outline:none;border-color:var(--blue)}
 
 /* ---------- search ---------- */
 .searchwrap{position:sticky;top:0;z-index:30;
@@ -198,39 +231,39 @@ body{overflow:hidden}
 .searchbar{position:relative;display:flex;align-items:center}
 .searchbar svg.mag{position:absolute;left:13px;width:18px;height:18px;color:var(--ink-45);stroke-width:2.1;pointer-events:none}
 .searchbar input{
-  width:100%;padding:14px 42px 14px 40px;border:1.5px solid var(--rule);
-  border-radius:12px;font-size:16px;background:#fff;box-shadow:var(--shadow);
+  width:100%;padding:14px 42px 14px 40px;border:1px solid var(--rule);
+  border-radius:980px;font-size:16px;background:var(--card);
   transition:border-color .15s
 }
-.searchbar input:focus{outline:none;border-color:var(--ink)}
+.searchbar input:focus{outline:none;border-color:var(--blue)}
 .searchbar input::-webkit-search-cancel-button,.searchbar input::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
 .searchbar .clr{
-  position:absolute;right:6px;width:32px;height:32px;border-radius:8px;
+  position:absolute;right:8px;width:32px;height:32px;border-radius:980px;
   display:grid;place-items:center;color:var(--ink-45)
 }
 .searchbar .clr svg{width:16px;height:16px;stroke-width:2.2}
 .filters{display:flex;gap:7px;margin-top:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .filters::-webkit-scrollbar{display:none}
 .fchip{
-  flex:none;padding:8px 13px;border-radius:20px;border:1.5px solid var(--rule);
-  background:#fff;font-size:12.5px;font-weight:600;color:var(--ink-70);
+  flex:none;padding:9px 15px;border-radius:980px;border:1px solid var(--rule);
+  background:var(--card);font-size:13.5px;font-weight:500;color:var(--ink-70);
   display:inline-flex;align-items:center;gap:6px;transition:all .14s;white-space:nowrap
 }
-.fchip.active{background:var(--chrome);color:#fff;border-color:var(--chrome)}
+.fchip.active{background:var(--blue-fill);color:#fff;border-color:var(--blue-fill)}
 .fchip svg{width:13px;height:13px;stroke-width:2.3}
 .count{font-size:12.5px;color:var(--ink-45);padding:10px 2px 8px;font-weight:500}
 .count b{color:var(--ink);font-weight:700}
 /* Blue, not the brand red: in this app red is a status — a sign that is
    missing — so it cannot also mean "tap me". */
 .count .discsw{display:block;margin-top:2px;background:none;border:0;padding:8px 0;
-  font:inherit;color:var(--blue);font-weight:600;text-decoration:underline;
-  text-underline-offset:2px;min-height:40px;text-align:left}
+  font:inherit;color:var(--link);font-weight:500;min-height:40px;text-align:left}
+.count .discsw::after{content:" \203A"}
 
 /* ---------- product rows ---------- */
 .prow{
-  background:var(--card);border:1px solid var(--rule);border-radius:12px;
+  background:var(--card);border-radius:16px;
   padding:12px 13px;margin-bottom:7px;display:flex;gap:11px;align-items:center;
-  box-shadow:var(--shadow);transition:background .1s,border-color .15s;width:100%;text-align:left
+  transition:background .1s;width:100%;text-align:left
 }
 .prow:active{transform:scale(.988);border-color:var(--ink)}
 .prow-body{flex:1;min-width:0}
@@ -254,7 +287,7 @@ body{overflow:hidden}
 }
 .oline-top{display:flex;gap:10px;align-items:flex-start}
 .oline-name{font-size:14.5px;font-weight:640;line-height:1.3;flex:1}
-.stepper{display:flex;align-items:center;gap:0;border:1.5px solid var(--rule);border-radius:9px;overflow:hidden}
+.stepper{display:flex;align-items:center;gap:0;border:1px solid var(--rule);border-radius:980px;overflow:hidden}
 .stepper button{width:36px;height:36px;display:grid;place-items:center;color:var(--ink);transition:background .13s}
 .stepper button:active{background:var(--rule-2)}
 .stepper button svg{width:15px;height:15px;stroke-width:2.6}
@@ -280,7 +313,7 @@ body{overflow:hidden}
 
 /* ---------- photos ---------- */
 .photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:10px}
-.photocard{background:var(--card);border:1px solid var(--rule);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.photocard{background:var(--card);border-radius:20px;overflow:hidden}
 .photocard img{width:100%;height:120px;object-fit:cover;display:block;background:var(--rule-2)}
 @supports (aspect-ratio:4/3){.photocard img{height:auto;aspect-ratio:4/3;max-height:210px}}
 .photocard .pc-body{padding:9px 10px 10px}
@@ -318,51 +351,52 @@ body{overflow:hidden}
   display:flex;flex-direction:column;align-items:stretch}
 .pc-parts .pc-part:first-child{border-top:none}
 .shoot{
-  width:100%;padding:16px;border:2px dashed var(--rule);border-radius:13px;background:#fff;
-  display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--ink-70);
-  font-weight:640;font-size:14px;transition:all .15s;margin-bottom:14px
+  width:100%;padding:18px;border:1px dashed var(--rule);border-radius:22px;background:transparent;
+  display:flex;flex-direction:column;align-items:center;gap:7px;color:var(--link);
+  font-weight:500;font-size:15px;transition:all .15s;margin-bottom:14px
 }
-.shoot:hover{border-color:var(--red);color:var(--red)}
+.shoot:hover{border-color:var(--link);background:var(--card)}
 .shoot svg{width:26px;height:26px;stroke-width:1.8}
 
 /* ---------- report ---------- */
 .kpi{
-  background:var(--chrome);color:#fff;border-radius:16px;padding:22px 20px;margin-bottom:12px;
+  background:var(--chrome);color:#fff;border-radius:22px;padding:26px 22px;margin-bottom:12px;
   position:relative;overflow:hidden
 }
-.kpi::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;
-  background:var(--red);opacity:.13;border-radius:50%}
-.kpi .n{font-size:52px;font-weight:800;letter-spacing:-.035em;line-height:1}
-.kpi .lbl{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:7px}
+.kpi .n{font-size:56px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.kpi .lbl{font-size:11.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:7px}
 .kpi .sub{font-size:13px;color:rgba(255,255,255,.72);margin-top:8px}
 .statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
-.stat{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:13px 12px;box-shadow:var(--shadow)}
-.stat .n{font-size:25px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
-.stat .l{font-size:11px;color:var(--ink-45);margin-top:3px;font-weight:600}
+.stat{background:var(--card);border-radius:20px;padding:20px 18px}
+.stat .n{font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.1}
+.stat .l{font-size:14px;color:var(--ink-45);margin-top:2px;font-weight:400}
 .stat.bad .n{color:var(--red)} .stat.warn .n{color:var(--amber)} .stat.good .n{color:var(--green)}
-.bar{height:9px;border-radius:5px;background:var(--rule-2);overflow:hidden;display:flex;margin-top:12px}
+.bar{height:9px;border-radius:980px;background:var(--rule-2);overflow:hidden;display:flex;margin-top:12px}
 .bar i{display:block;height:100%}
 .actionrow{display:grid;gap:8px;margin-top:6px}
 .btn{
-  padding:14px 18px;border-radius:12px;font-size:14.5px;font-weight:680;
+  padding:13px 22px;border-radius:980px;font-size:15px;font-weight:500;letter-spacing:-.01em;
   display:flex;align-items:center;justify-content:center;gap:9px;transition:all .15s;
-  border:1.5px solid transparent
+  border:1px solid transparent
 }
 .btn svg{width:17px;height:17px;stroke-width:2.1}
-.btn-primary{background:var(--red);color:#fff}
-.btn-primary:hover{background:var(--red-dark)}
-.btn-ghost{background:#fff;border-color:var(--rule);color:var(--ink)}
-.btn-ghost:hover{border-color:var(--ink)}
+/* The primary action is blue. Red is reserved for a sign that is missing —
+   it is the only colour here that carries a meaning, so it is not spent on
+   a button. */
+.btn-primary{background:var(--blue-fill);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:transparent;border-color:var(--rule);color:var(--link)}
+.btn-ghost:hover{border-color:var(--link);background:var(--card)}
 
 /* ---------- setup / sheet ---------- */
 .overlay{
-  position:fixed;inset:0;z-index:100;background:rgba(13,13,13,.42);
+  position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.42);
   display:none;align-items:flex-end;justify-content:center;
   backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)
 }
 .overlay.on{display:flex;animation:fade .16s ease}
 .sheet{
-  background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;
+  background:var(--card);width:100%;max-width:520px;border-radius:28px 28px 0 0;
   padding:22px 18px calc(22px + env(safe-area-inset-bottom));
   box-shadow:var(--shadow-lg);animation:up .24s cubic-bezier(.22,1,.36,1);
   max-height:88vh;overflow-y:auto
@@ -372,9 +406,9 @@ body{overflow:hidden}
 .field{margin-bottom:14px}
 .field label{display:block;margin-bottom:6px}
 .field input,.field select{
-  width:100%;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;font-size:16px;background:#FCFCFA
+  width:100%;padding:13px 14px;border:1px solid var(--rule);border-radius:12px;font-size:16px;background:var(--card)
 }
-.field input:focus,.field select:focus{outline:none;border-color:var(--ink);background:#fff}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
 /* The browser's own arrow sits too tight on iOS, and 16px keeps it from
    zooming the page when the picker opens. */
 .field select{
@@ -392,7 +426,7 @@ body{overflow:hidden}
   position:fixed;left:50%;
   transform:translateX(-50%) translateY(calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px + 100% + 24px));
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);z-index:90;background:var(--chrome);color:#fff;
-  padding:11px 17px;border-radius:11px;font-size:13.5px;font-weight:600;
+  padding:12px 20px;border-radius:980px;font-size:13.5px;font-weight:600;
   box-shadow:var(--shadow-lg);transition:transform .26s cubic-bezier(.22,1,.36,1);
   display:flex;align-items:center;gap:9px;max-width:90vw;pointer-events:none
 }
@@ -409,17 +443,18 @@ body{overflow:hidden}
 @media (min-width:768px){
   body{font-size:15.5px}
   .nav{
-    order:1;max-width:960px;margin:0 auto;
+    position:static;order:1;max-width:960px;margin:0 auto;left:auto;right:auto;bottom:auto;
     grid-template-columns:repeat(5,auto);justify-content:start;gap:2px;
-    background:var(--card);padding:0 10px;border-top:none;border-bottom:1px solid var(--rule);
-    backdrop-filter:none;-webkit-backdrop-filter:none;z-index:39
+    background:var(--card);padding:0 10px;border-radius:0;border-bottom:1px solid var(--rule);
+    backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;z-index:39
   }
   .nav button{flex-direction:row;gap:8px;font-size:13.5px;padding:14px 15px;min-height:0}
   .nav button svg{width:17px;height:17px}
-  .nav button.on::before{top:auto;bottom:0;width:100%;border-radius:3px 3px 0 0}
+  .nav button.on::after{inset:auto 0 0 0;height:2.5px;border-radius:3px 3px 0 0;background:var(--link)}
   [hidden]{display:none!important}
 .nav .badge{position:static;transform:none}
   .screen{padding:22px 20px 40px}
+  .nav .badge{position:static;transform:none}
   .searchwrap{top:0}
   .chips{grid-template-columns:repeat(4,minmax(0,92px));justify-content:start}
   .overlay{align-items:center}
@@ -446,9 +481,9 @@ body{overflow:hidden}
 
 /* ---- add-area card ---- */
 .addcard{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
-  padding:16px;border:1.5px dashed var(--rule);border-radius:13px;background:#FCFCFA;
-  font-size:14.5px;font-weight:650;color:var(--ink-45);transition:all .15s;min-height:56px}
-.addcard:hover{border-color:var(--ink-45);color:var(--ink);background:#fff}
+  padding:16px;border:1px dashed var(--rule);border-radius:22px;background:transparent;
+  font-size:15px;font-weight:500;color:var(--link);transition:all .15s;min-height:56px}
+.addcard:hover{border-color:var(--link);background:var(--card)}
 .addcard:active{transform:scale(.99)}
 
 /* ---- inline tip ---- */
@@ -463,7 +498,7 @@ body{overflow:hidden}
 .del.faint{color:#C4C4BE;width:38px;height:38px;margin:-4px -4px 0 0;flex:none;align-self:flex-start}
 .del.faint:hover{color:var(--red);background:var(--red-tint)}
 .areamenu{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
-  color:var(--ink-45);border:1px solid var(--rule);background:#fff;flex:none;transition:all .14s}
+  color:var(--ink-45);border:1px solid var(--rule);background:var(--card);flex:none;transition:all .14s}
 .areamenu:hover{border-color:var(--ink);color:var(--ink)}
 
 .lede{color:var(--ink-45);font-size:14px;margin-bottom:14px;line-height:1.5}
@@ -471,17 +506,19 @@ body{overflow:hidden}
 .hint{color:var(--ink-45);font-size:13px;line-height:1.5;margin:2px 0 10px}
 
 .btn-block{width:100%;margin-bottom:10px}
-.btn.danger{color:var(--red);border-color:#F3D4D6}
+/* the deeper red, not the badge red: the plain brand red is 4.48:1 on white,
+   just under readable, and this is the one button there is no undo for. */
+.btn.danger{color:var(--red-dark);border-color:#F3D4D6}
 .btn.danger:hover{border-color:var(--red);background:var(--red-tint)}
-.btn.danger-solid{background:var(--red)}
+.btn.danger-solid{background:var(--red-fill)}
 
 /* ---- area cards ---- */
 /* One filled container with hairline separators inside it, the way a grouped
    list is drawn on the phone — rather than a row of separate cards each with
    its own border, shadow and gap, which is a web pattern and reads as one. */
 .arealist{
-  margin-top:4px;background:var(--card);border:1px solid var(--rule);
-  border-radius:16px;overflow:hidden;box-shadow:var(--shadow)
+  margin-top:4px;margin-bottom:12px;background:var(--card);
+  border-radius:22px;overflow:hidden
 }
 .areacard{
   width:100%;display:flex;align-items:center;gap:10px;text-align:left;
@@ -498,34 +535,34 @@ body{overflow:hidden}
 .areacard.done{border-left-color:var(--green)}
 .areacard.compact{padding:12px 13px}
 .areacard-main{flex:1;min-width:0}
-.areacard-name{font-size:15.5px;font-weight:680;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.areacard-meta{font-size:12.5px;color:var(--ink-45);margin-top:3px}
+.areacard-name{font-size:16.5px;font-weight:600;letter-spacing:-.016em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.areacard-meta{font-size:13px;color:var(--ink-45);margin-top:4px}
 .areacard-flags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
 .flag{font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:5px}
 .flag.miss{background:var(--red-tint);color:var(--red-dark)}
 .flag.dam{background:var(--amber-tint);color:#8A5300}
 .areacard svg{color:var(--ink-45);flex:none}
-.progress{height:4px;border-radius:3px;background:var(--rule-2);margin-top:9px;overflow:hidden}
-.progress i{display:block;height:100%;background:var(--ink);border-radius:3px;transition:width .25s}
+.progress{height:4px;border-radius:980px;background:var(--rule-2);margin-top:9px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--link);border-radius:980px;transition:width .25s}
 .areacard.done .progress i{background:var(--green)}
 
-.pill{font-size:10px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:20px;
+.pill{font-size:10px;font-weight:600;letter-spacing:.02em;padding:3px 8px;border-radius:980px;
   display:inline-flex;align-items:center;gap:4px}
 .pill.done{background:var(--green-tint);color:var(--green)}
 .pill.blue{background:#E8F0FA;color:var(--blue)}
 
 /* ---- inside an area ---- */
 .backlink{
-  display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:640;
-  color:var(--ink-45);padding:6px 0 10px;transition:color .14s;min-height:40px;padding-right:8px}
+  display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:500;
+  color:var(--link);padding:6px 8px 10px 0;transition:color .14s;min-height:40px}
 .backlink:hover{color:var(--ink)}
 /* A line, not a slab: it sits under the area's own count without competing
    with the sign cards below it. */
 .linkline{
-  display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;
-  color:var(--blue);padding:8px 2px;margin:-4px 0 10px;min-height:40px;
-  text-decoration:underline;text-underline-offset:3px
+  display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;
+  color:var(--link);padding:8px 2px;margin:-4px 0 10px;min-height:40px
 }
+.linkline::after{content:" \203A"}
 .linkline svg{width:14px;height:14px;stroke-width:2.4}
 .areahead{display:flex;align-items:flex-start;gap:10px}
 .areahead h1{flex:1;min-width:0;word-break:break-word}
@@ -534,8 +571,10 @@ body{overflow:hidden}
 /* Everything checked, but the area not closed off yet — a statement, not a
    warning: it is perfectly normal to come back to an area later. */
 .pill.ready{background:var(--rule-2);color:var(--ink-70)}
-.sectionhead{display:flex;align-items:center;gap:9px;margin:20px 0 10px}
-.sectionhead .line{flex:1;height:1px;background:var(--rule)}
+.sectionhead{display:flex;align-items:center;gap:0;margin:32px 0 13px}
+.sectionhead .line{display:none}
+.sectionhead .eyebrow{font-size:18px;font-weight:600;letter-spacing:-.016em;
+  color:var(--ink);text-transform:none}
 
 .areafoot{margin-top:26px;padding-top:18px;border-top:1px solid var(--rule)}
 .donebar{
@@ -558,13 +597,13 @@ body{overflow:hidden}
 .noteblock{margin:2px 0 6px}
 .noteline{margin-top:8px}
 .note-add{
-  display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:620;color:var(--ink-45);
-  border:1px dashed var(--rule);border-radius:9px;padding:9px 12px;width:100%;
-  transition:all .14s;background:#FCFCFA;text-align:left
+  display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:400;color:var(--link);
+  border:1px dashed var(--rule);border-radius:980px;padding:11px 16px;width:100%;
+  transition:all .14s;background:transparent;text-align:left
 }
-.note-add:hover{border-color:var(--ink-45);color:var(--ink);background:#fff}
+.note-add:hover{border-color:var(--link);background:var(--card)}
 .note-add.small{font-size:12.5px;padding:7px 10px}
-.note-add.inline{width:auto;border-style:solid;background:#fff;max-width:62%;
+.note-add.inline{width:auto;border-style:solid;background:var(--card);max-width:62%;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .note-shown{
   background:#FFFDF4;border:1px solid #EFE6C8;border-radius:10px;padding:10px 12px;
@@ -587,8 +626,8 @@ body{overflow:hidden}
 /* ---- report totals ---- */
 .card.totals{padding:15px 15px 13px;margin-bottom:14px}
 .totalrow{display:flex;gap:22px;flex-wrap:wrap}
-.tn{font-size:22px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
-.tl{font-size:11.5px;color:var(--ink-45);font-weight:600;margin-top:2px}
+.tn{font-size:26px;font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.tl{font-size:13px;color:var(--ink-45);font-weight:400;margin-top:2px}
 
 /* ---- sheets ---- */
 .sheet h2{font-size:18px;font-weight:720;letter-spacing:-.015em;margin-bottom:4px}
@@ -619,12 +658,12 @@ body{overflow:hidden}
 
 .presetgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
 .preset{
-  padding:15px 12px;border:1.5px solid var(--rule);border-radius:12px;background:#fff;
-  text-align:left;font-size:14.5px;font-weight:650;transition:all .14s;min-height:66px
+  padding:16px 14px;border:none;border-radius:18px;background:var(--rule-2);
+  text-align:left;font-size:15px;font-weight:500;transition:all .14s;min-height:68px
 }
-.preset:hover{border-color:var(--ink);background:#FCFCFA}
-.preset:active{transform:scale(.98)}
-.preset span{display:block;font-size:11.5px;font-weight:500;color:var(--ink-45);margin-top:3px}
+.preset:hover{background:var(--rule)}
+.preset:active{background:var(--rule)}
+.preset span{display:block;font-size:13px;font-weight:400;color:var(--ink-45);margin-top:3px}
 
 .typegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .typebtn{
@@ -657,20 +696,23 @@ body{overflow:hidden}
    see its definition in :root — so the topbar/kpi/etc. don't need repeating. */
 html.dark{color-scheme:dark}
 html.dark{
-  --ink:#F1F1EE; --ink-70:#C6C6C1; --ink-45:#8D8D89;
-  --paper:#131213; --card:#1D1D1F; --rule:#333335; --rule-2:#28282A;
-  --red:#FF6B61; --red-dark:#FF877E; --red-tint:#3C1A19;
-  --green:#3ED88A; --green-tint:#123023;
-  --amber:#FFB347; --amber-tint:#3A2A0C;
-  --blue:#6CB0FF;
-  --chrome:#232325;
-  --shadow:0 1px 2px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.45);
-  --shadow-lg:0 8px 40px rgba(0,0,0,.65);
+  --ink:#f5f5f7; --ink-70:#d2d2d7; --ink-45:#98989f;
+  --paper:#000000; --card:#1d1d1f; --rule:#424245; --rule-2:#2d2d2f;
+  --red:#ff6961; --red-dark:#ff877e; --red-tint:#3a1715;
+  --green:#30d158; --green-tint:#10301c;
+  --amber:#ff9f0a; --amber-tint:#3d2a08;
+  --blue:#2997ff; --link:#2997ff;
+  --chrome:#1d1d1f;
+  --shadow:0 2px 12px rgba(0,0,0,.6);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.75);
 }
 html.dark body{background:var(--paper)}
 html.dark ::selection{background:#3A5A8C;color:#fff}
-html.dark .chip,html.dark .fchip,html.dark .shoot,html.dark .preset,html.dark .typebtn,
+html.dark .chip,html.dark .fchip,html.dark .shoot,html.dark .typebtn,
 html.dark .areamenu,html.dark .btn-ghost,html.dark .btn-find.ghost{background:var(--card)}
+/* .preset is deliberately NOT in that list: the tiles sit inside a sheet, and a
+   sheet is already --card in the dark, so painting them --card makes them vanish.
+   They keep --rule-2, the step up from the sheet, exactly as in the light. */
 html.dark .btn-ghost,html.dark .btn-find.ghost{color:var(--ink)}
 html.dark .btn-find.ghost:hover{background:var(--card)}
 html.dark .note-in,html.dark .field input,html.dark .field select,html.dark .searchbar input,
@@ -680,7 +722,7 @@ html.dark .note-in:focus,html.dark .field input:focus,html.dark .searchbar input
 html.dark .sheet-search:focus,html.dark .sheet-text:focus{background:#2D2D30;border-color:#5A5A5C}
 html.dark .addcard,html.dark .note-add,html.dark .note-add.inline{background:#1A1A1C}
 html.dark .addcard:hover,html.dark .note-add:hover{background:#232325}
-html.dark .preset:hover,html.dark .typebtn.on{background:#28282A;border-color:var(--ink-45)}
+html.dark .preset:hover,html.dark .typebtn.on{background:#3a3a3c}
 html.dark .listrow:active{background:#2A2A2C}
 html.dark .pn{background:#28282A}
 html.dark .tag.t-rec,html.dark .flag.dam,html.dark .disc{color:#FFC988}
@@ -694,8 +736,17 @@ html.dark .tipbar{background:#0F2138;border-color:#1B3352;color:#9FC4F0}
 html.dark .tipbar svg{color:#6FA6E0}
 html.dark .refbar,html.dark .ref,html.dark .pill.blue{background:#0F2138;color:#7FB4F5}
 html.dark .overlay{background:rgba(0,0,0,.6)}
-html.dark .nav{background:rgba(22,22,23,.92);border-top-color:var(--rule)}
-@media (min-width:768px){html.dark .nav{background:var(--card);border-bottom-color:var(--rule);border-top:none}}
+html.dark .nav{
+  background:rgba(40,40,42,.68);
+  box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 8px 30px rgba(0,0,0,.6),
+             0 0 0 1px rgba(255,255,255,.1)
+}
+html.dark .nav button.on::after{background:rgba(41,151,255,.2)}
+html.dark .topbar{background:rgba(22,22,23,.8);border-bottom-color:rgba(255,255,255,.12)}
+@media (min-width:768px){
+  html.dark .nav{background:var(--card);border-bottom-color:var(--rule);box-shadow:none}
+  html.dark .nav button.on::after{background:var(--link)}
+}
 html.dark .empty svg{color:var(--rule)}
 html.dark .photocard img{background:var(--rule-2)}
 
@@ -809,14 +860,14 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
 /* ---- guide sub-navigation ---- */
 .segmented{
   display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:3px;
-  background:var(--rule-2);border-radius:11px;margin:14px 0 4px
+  background:var(--rule-2);border-radius:980px;margin:14px 0 4px
 }
 .segmented button{
-  padding:9px 4px;border-radius:8px;font-size:12.5px;font-weight:640;color:var(--ink-45);
+  padding:10px 4px;border-radius:980px;font-size:14px;font-weight:500;color:var(--ink-45);
   white-space:nowrap;
   transition:background .14s,color .14s
 }
-.segmented button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.segmented button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
 /* ---- guide reference blocks ---- */
 .refblock{
@@ -861,8 +912,7 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
 .zonebar button:hover{color:var(--ink);border-color:var(--ink-45)}
 /* The same grouped look for the Guide's zone and sign-set rows. */
 #zoneList,.setlist{
-  background:var(--card);border:1px solid var(--rule);border-radius:16px;
-  overflow:hidden;box-shadow:var(--shadow)
+  background:var(--card);border-radius:22px;overflow:hidden;margin-bottom:12px
 }
 #zoneList .zoneblock,.setlist .zoneblock{
   border:0;border-radius:0;margin:0;box-shadow:none;background:transparent
@@ -873,8 +923,7 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
 .zoneblock>summary:active{background:var(--rule-2)}
 .prow:active,.preset:active,.thumb:active,.oline:active,.photocard:active{background:var(--rule-2)}
 .zoneblock{
-  background:var(--card);border:1px solid var(--rule);border-radius:13px;
-  margin-bottom:8px;box-shadow:var(--shadow);overflow:hidden
+  background:var(--card);border-radius:20px;margin-bottom:8px;overflow:hidden
 }
 .zoneblock>summary{
   list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;
