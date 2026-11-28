@@ -220,9 +220,9 @@ body{overflow:hidden}
 .fchip svg{width:13px;height:13px;stroke-width:2.3}
 .count{font-size:12.5px;color:var(--ink-45);padding:10px 2px 8px;font-weight:500}
 .count b{color:var(--ink);font-weight:700}
-.count .discsw{display:block;margin-top:4px;background:none;border:0;padding:0;
+.count .discsw{display:block;margin-top:2px;background:none;border:0;padding:8px 0;
   font:inherit;color:var(--brand);font-weight:600;text-decoration:underline;
-  text-underline-offset:2px;min-height:28px;text-align:left}
+  text-underline-offset:2px;min-height:40px;text-align:left}
 
 /* ---------- product rows ---------- */
 .prow{
@@ -296,7 +296,8 @@ body{overflow:hidden}
 .pc-part-bits:hover{background:var(--rule-2)}
 .pc-part-bits .pc-pen{width:11px;height:11px;stroke-width:2.2;color:var(--ink-45);flex:none}
 .pc-part-name{font-weight:640;color:var(--ink)}
-.pc-part-x{color:var(--ink-45);width:26px;height:26px;display:grid;place-items:center;border-radius:7px;flex:none}
+.pc-part-x{color:var(--ink-45);width:38px;height:38px;margin:-6px -6px -6px 0;
+  display:grid;place-items:center;border-radius:9px;flex:none}
 .pc-part-x:hover{color:var(--red);background:var(--red-tint)}
 .pc-part-x svg{width:11px;height:11px;stroke-width:2.4}
 .photocard .pc-act{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
@@ -305,7 +306,9 @@ body{overflow:hidden}
 /* The quantity sits under the name rather than beside it: a part number, a
    name, a material, a size and a stepper do not fit across a phone. */
 .stepper.small{align-self:flex-start;margin-top:5px;border-radius:8px}
-.stepper.small button{width:30px;height:30px}
+/* The − and + on a photo part are tapped repeatedly, often with a glove on;
+   30px was the smallest target in the app. */
+.stepper.small button{width:36px;height:36px}
 .stepper.small button svg{width:13px;height:13px}
 .stepper.small input.n{width:44px;min-width:44px;padding:5px 2px;font-size:16px}
 .pc-parts{margin-top:8px;border:1px solid var(--rule);border-radius:9px;overflow:hidden}
@@ -455,7 +458,7 @@ body{overflow:hidden}
 .tipbar button{margin-left:auto;flex:none;font-size:12.5px;font-weight:700;color:var(--blue);
   white-space:nowrap;text-decoration:underline;padding:2px 0}
 
-.del.faint{color:#C4C4BE;width:30px;height:30px;flex:none;align-self:flex-start}
+.del.faint{color:#C4C4BE;width:38px;height:38px;margin:-4px -4px 0 0;flex:none;align-self:flex-start}
 .del.faint:hover{color:var(--red);background:var(--red-tint)}
 .areamenu{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
   color:var(--ink-45);border:1px solid var(--rule);background:#fff;flex:none;transition:all .14s}
@@ -502,13 +505,23 @@ body{overflow:hidden}
 /* ---- inside an area ---- */
 .backlink{
   display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:640;
-  color:var(--ink-45);padding:6px 0 10px;transition:color .14s
-}
+  color:var(--ink-45);padding:6px 0 10px;transition:color .14s;min-height:40px;padding-right:8px}
 .backlink:hover{color:var(--ink)}
+/* A line, not a slab: it sits under the area's own count without competing
+   with the sign cards below it. */
+.linkline{
+  display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;
+  color:var(--brand);padding:8px 2px;margin:-4px 0 10px;min-height:40px;
+  text-decoration:underline;text-underline-offset:3px
+}
+.linkline svg{width:14px;height:14px;stroke-width:2.4}
 .areahead{display:flex;align-items:flex-start;gap:10px}
 .areahead h1{flex:1;min-width:0;word-break:break-word}
 .iconbtn.dark{color:var(--ink-45);background:none;width:38px;height:38px;flex:none;border-radius:10px}
 .iconbtn.dark:hover{background:var(--rule-2);color:var(--ink)}
+/* Everything checked, but the area not closed off yet — a statement, not a
+   warning: it is perfectly normal to come back to an area later. */
+.pill.ready{background:var(--rule-2);color:var(--ink-70)}
 .sectionhead{display:flex;align-items:center;gap:9px;margin:20px 0 10px}
 .sectionhead .line{flex:1;height:1px;background:var(--rule)}
 
@@ -681,7 +694,8 @@ html.dark .photocard img{background:var(--rule-2)}
 /* ---- toast action button (undo etc.) ---- */
 .toast .toast-act{
   margin-left:2px;flex:none;font-weight:750;color:#8FD6FF;text-decoration:underline;
-  text-underline-offset:2px;padding:2px 0 2px 2px;pointer-events:auto
+  text-underline-offset:2px;padding:11px 4px 11px 10px;margin-top:-9px;margin-bottom:-9px;
+  pointer-events:auto;min-height:44px;display:inline-flex;align-items:center
 }
 html.dark .toast .toast-act{color:#9FE0FF}
 
@@ -706,6 +720,7 @@ html.dark .toast .toast-act{color:#9FE0FF}
 /* ---- area menu extra actions ---- */
 .menurow{display:flex;gap:8px;margin-bottom:8px}
 .linkbtn{font:inherit;color:var(--red);font-weight:660;text-decoration:underline;
+  padding:9px 2px;min-height:40px;
   text-underline-offset:2px;padding:2px 0}
 .menurow .btn{flex:1}
 
@@ -2237,11 +2252,11 @@ document.querySelectorAll(".nav button").forEach(function (b) {
 function ensureArea() {
   if (area()) return area();
   for (var i = 0; i < S.areas.length; i++) {
-    if (S.areas[i].general && !S.areas[i].done) { S.active = S.areas[i].id; save(); return S.areas[i]; }
+    if (S.areas[i].general && !S.areas[i].done) { setActiveArea(S.areas[i].id); save(); return S.areas[i]; }
   }
   var a = { id: S.seq++, name: "General", note: "", done: false, general: true,
             signs: [], order: [], photos: [] };
-  S.areas.push(a); S.active = a.id; save();
+  S.areas.push(a); setActiveArea(a.id); save();
   return a;
 }
 
@@ -2289,10 +2304,14 @@ function renderSurvey() {
     var bits = [];
     if (ar.order.length) bits.push(ar.order.length + (ar.order.length > 1 ? " products" : " product"));
     if (ar.photos.length) bits.push(ar.photos.length + (ar.photos.length > 1 ? " photos" : " photo"));
+    /* Every sign checked but the area never closed: the list gave no hint,
+       so an area sat at "0 of 5 done" with nothing left to do in it. */
+    var allDone = st.total && st.done === st.total && !ar.done;
     h += '<button class="areacard' + (ar.done ? " done" : "") + '" data-open="' + ar.id + '">'
        + '<div class="areacard-main">'
        +   '<div class="areacard-name">' + esc(ar.name)
-       +     (ar.done ? '<span class="pill done">' + ic("check", 12) + 'Complete</span>' : "")
+       +     (ar.done ? '<span class="pill done">' + ic("check", 12) + 'Complete</span>'
+                       : (allDone ? '<span class="pill ready">All checked</span>' : ""))
        +   '</div>'
        +   '<div class="areacard-meta">'
        +     (st.total ? st.done + " of " + st.total + " signs" : "No signs yet")
@@ -2328,7 +2347,15 @@ function renderArea(a) {
             : (a.order.length || a.photos.length ? 'Photos and products' : 'Nothing recorded here yet'))
         + (a.order.length ? ' · ' + a.order.length + ' product' + (a.order.length > 1 ? "s" : "") : "")
         + (a.photos.length ? ' · ' + a.photos.length + ' photo' + (a.photos.length > 1 ? "s" : "") : "")
-        + '</p>';
+        + '</p>'
+        /* Settling the rest was only offered under the last card, so on an
+           eight-sign area you scrolled past everything to reach the button
+           that saves the scrolling. Offered here too, as a line rather than
+           a second slab. */
+        + (st.total && st.total > st.done && st.total - st.done > 2
+            ? '<button class="allok linkline" id="allOkTop">' + ic("check", 14)
+              + 'Mark the remaining ' + (st.total - st.done) + ' as OK</button>'
+            : "");
 
   /* area note */
   h += '<div class="noteblock" id="areaNoteBlock">';
@@ -2359,7 +2386,7 @@ function renderArea(a) {
        times an area. */
     var left = st.total - st.done;
     if (left) {
-      h += '<button class="btn btn-ghost btn-block" id="allOk" style="margin-bottom:8px">'
+      h += '<button class="btn btn-ghost btn-block allok" id="allOk" style="margin-bottom:8px">'
          + ic("check", 16) + 'Mark the remaining ' + left + ' as OK</button>';
     }
   }
@@ -2498,6 +2525,16 @@ var showDisc = false;
    reference bar is cancelled, or the catalogue is left. */
 var replacingPart = null;
 
+/* Going to find a part for a photo, then walking off to another area, used
+   to leave the photo id pointing into the area you left. The next product
+   picked went looking for a photo that was not there and was dropped on the
+   floor — no row, no error, nothing. Anything waiting to be matched belongs
+   to the area it was started from, so switching areas clears it. */
+function setActiveArea(id) {
+  if (S.active !== id) { pendingSign = null; pendingPhoto = null; replacingPart = null; }
+  S.active = id;
+}
+
 function photoById(a, id) {
   if (!a) return null;
   for (var i = 0; i < a.photos.length; i++) if (a.photos[i].id === id) return a.photos[i];
@@ -2601,7 +2638,8 @@ function renderParts() {
       $("#s-parts").innerHTML = '<h1 style="margin:6px 0 2px">Find products</h1>'
         + empty("search", "Catalogue unavailable",
             "The product data couldn't be read on this device. You can still add a custom item and the office will quote it.")
-        + '<button class="btn btn-primary btn-block" id="addCustom">' + ic("plus") + 'Add a custom item</button>';
+        + '<button class="btn btn-primary btn-block addcustom" id="addCustomNoCat">'
+        + ic("plus") + 'Add a custom item</button>';
       return;
     }
     $("#s-parts").innerHTML = '<h1 style="margin:6px 0 2px">Find products</h1>'
@@ -2661,7 +2699,7 @@ function renderRefNote() {
   var cEl2 = $("#refCustom");
   if (cEl2) {
     cEl2.innerHTML = name
-      ? '<button class="btn btn-ghost btn-block" id="addCustom" style="margin:10px 0 2px">'
+      ? '<button class="btn btn-ghost btn-block addcustom" id="addCustom" style="margin:10px 0 2px">'
         + ic("plus", 15) + 'Not in the catalogue? Add a custom item</button>' : "";
   }
 }
@@ -2682,14 +2720,16 @@ function renderResults() {
   if (!res.count) {
     h = empty("search", "No products match",
         "Try fewer words, a part number, or clear the filters.")
-      + '<button class="btn btn-primary btn-block" id="addCustom">' + ic("plus") + 'Add a custom item</button>';
+      + '<button class="btn btn-primary btn-block addcustom" id="addCustomNone">'
+      + ic("plus") + 'Add a custom item</button>';
   } else {
     for (i = 0; i < res.ids.length; i++) h += prow(res.ids[i]);
     if (res.count > shown) {
       h += '<button class="btn btn-ghost btn-block" id="more">Show '
          + Math.min(LIMIT, res.count - shown) + ' more</button>';
     }
-    h += '<button class="btn btn-ghost btn-block" id="addCustom">' + ic("plus") + 'Not listed? Add a custom item</button>';
+    h += '<button class="btn btn-ghost btn-block addcustom" id="addCustomEnd">'
+       + ic("plus") + 'Not listed? Add a custom item</button>';
   }
   rEl.innerHTML = h;
 }
@@ -2719,7 +2759,15 @@ function addPart(idx) {
     var ph = photoById(a, pendingPhoto);
     var swap = replacingPart;
     pendingPhoto = null; replacingPart = null;
-    if (!ph) return;
+    /* The photo is not in this area — it belonged to one left behind. Rather
+       than drop the product silently, it joins this area's own list. */
+    if (!ph) {
+      a.order.push({ id: S.seq++, pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p),
+                     qty: 1, signId: null, custom: false, note: "" });
+      save(); toast("Added to " + a.name);
+      if (TAB === "parts") { renderRefNote(); renderOrderList(); badges(); } else render();
+      return;
+    }
     if (!ph.parts) ph.parts = [];
     var fresh = { pn: p[0], name: p[1], mat: matOf(p), size: sizeOf(p), custom: false, qty: 1 };
     var si2 = swap && swap.ph === ph.id ? ph.parts.indexOf(swap.ref) : -1;
@@ -3905,7 +3953,7 @@ function createArea(pi, wanted) {
   var a = { id: S.seq++, name: name, note: "", done: false, signs: [], order: [], photos: [] };
   for (var i = 0; i < pre.signs.length; i++) a.signs.push(makeSign(pre.signs[i]));
   S.areas.push(a);
-  S.active = a.id;
+  setActiveArea(a.id);
   save(); closeSheet(); go("survey");
   toast(name + " added");
   function nameTaken(nm) {
@@ -4235,7 +4283,7 @@ function openAreaMenu() {
         yes: "Delete area", no: "Keep it", danger: true,
         onYes: function () {
           for (var i = 0; i < S.areas.length; i++) if (S.areas[i].id === a.id) { S.areas.splice(i, 1); break; }
-          S.active = null; save(); go("survey"); toast("Area deleted");
+          setActiveArea(null); save(); go("survey"); toast("Area deleted");
         } });
     }, 200);
   });
@@ -4264,7 +4312,7 @@ function duplicateArea(a) {
                        statutory: s.statutory, legal: s.legal, st: "", qty: 1, note: "" });
   }
   S.areas.splice(S.areas.indexOf(a) + 1, 0, copy);
-  S.active = copy.id;
+  setActiveArea(copy.id);
   save(); closeSheet(); go("survey");
   toast('"' + name + '" created with the same signs');
   function nameTaken(nm) {
@@ -5133,14 +5181,14 @@ function empty(kind, title, body) {
 document.addEventListener("click", function (e) {
   var t = e.target, b, a = area();
 
-  if ((b = t.closest("[data-open]"))) { S.active = +b.dataset.open; save(); go("survey"); return; }
-  if (t.closest("#backAreas")) { S.active = null; save(); go("survey"); return; }
+  if ((b = t.closest("[data-open]"))) { setActiveArea(+b.dataset.open); save(); go("survey"); return; }
+  if (t.closest("#backAreas")) { setActiveArea(null); save(); go("survey"); return; }
   if (t.closest(".backArea")) { go("survey"); return; }
   if (t.closest("#addArea") || t.closest(".tipbtn")) { openAddArea(); return; }
   if ((b = t.closest("[data-preset]"))) { createArea(+b.dataset.preset, typedAreaName()); return; }
   if (t.closest("#makeArea")) { createArea(null, typedAreaName()); return; }
   if (t.closest("#renameArea")) { openAreaMenu(); return; }
-  if (t.closest("#allOk")) {
+  if (t.closest(".allok")) {
     if (!a) return;
     var wasAreaId = a.id, before = [], ni;
     for (ni = 0; ni < a.signs.length; ni++) {
@@ -5349,7 +5397,9 @@ document.addEventListener("click", function (e) {
     renderGuideList(); badges();
     return;
   }
-  if (t.closest("#addCustom")) { openCustomProduct(); return; }
+  /* Matched by class: the same button appears in up to four places and two
+     of them can be on screen together, so it cannot be an id. */
+  if (t.closest(".addcustom")) { openCustomProduct(); return; }
   if (t.closest("#shoot")) { $("#fileIn").click(); return; }
   if ((b = t.closest("[data-pick]"))) {
     var v2 = b.getAttribute("data-pick");
@@ -5411,7 +5461,7 @@ document.addEventListener("click", function (e) {
   if (t.closest("#btnTheme")) { applyTheme(currentTheme() === "dark" ? "light" : "dark"); return; }
 
   function doComplete() {
-    a.done = true; S.active = null; save(); go("survey");
+    a.done = true; setActiveArea(null); save(); go("survey");
     toast(a.name + " completed");
   }
 });

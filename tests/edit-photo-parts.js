@@ -181,6 +181,35 @@ const ck = (ok, msg) => { ok ? pass++ : fail++; console.log(`  ${ok ? 'ok  ' : '
   ck(await page.locator('.pc-part-bits').count() === 2,
      'cancelling drops the photo too, so the product goes to the area list instead');
 
+  console.log('\n--- walking off to another area mid-swap ---');
+  /* The photo id was left pointing into the area you came from, so the next
+     product went looking for a photo that was not there and was dropped
+     without a word. */
+  await page.click('.nav button[data-tab="survey"]');
+  await page.waitForTimeout(400);
+  await page.click('#backAreas');
+  await page.waitForTimeout(400);
+  await page.click('#addArea');
+  await page.waitForSelector('#areaName');
+  await page.fill('#areaName', 'Second area');
+  await page.click('#makeArea');
+  await page.waitForTimeout(600);
+  await page.click('.nav button[data-tab="photos"]');
+  await page.waitForTimeout(400);
+  ck(await page.locator('.photocard').count() === 0, 'the new area starts with no photos');
+  await page.click('.nav button[data-tab="parts"]');
+  await page.waitForTimeout(800);
+  ck(!/Replacing|For:/.test(await page.textContent('#refNote')),
+     'nothing is still waiting to be matched after changing area');
+  await page.fill('#q', 'no smoking');
+  await page.waitForTimeout(700);
+  await page.locator('#results .prow').first().click();
+  await page.waitForTimeout(900);
+  await page.click('.nav button[data-tab="survey"]');
+  await page.waitForTimeout(500);
+  ck(/No smoking/i.test(await page.textContent('#s-survey')),
+     'a product picked here lands here, rather than vanishing');
+
   console.log('\n--- what the office receives ---');
   await page.click('.nav button[data-tab="report"]');
   await page.waitForTimeout(600);

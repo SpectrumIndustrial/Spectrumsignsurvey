@@ -145,7 +145,7 @@ const has = (t, s, m) => { if (!String(t).includes(s)) throw new Error(`${m}: ${
     has(await line.textContent(), '2', 'qty stepped to 2');
   });
   await step('custom product', async () => {
-    await page.click('#addCustom');
+    await page.click('.addcustom');
     await page.waitForTimeout(400);
     await page.fill('#c-name', 'Bespoke fixing bracket');
     await page.fill('#c-mat', 'Steel');

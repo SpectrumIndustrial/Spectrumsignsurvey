@@ -76,7 +76,7 @@ const AREA  = 'Bay 3 & 4 — "the old paint shop"';
   /* a custom product with awkward text */
   await page.click('.nav button[data-tab="parts"]');
   await page.waitForTimeout(300);
-  await page.click('#addCustom');
+  await page.click('.addcustom');
   await page.waitForTimeout(450);
   await page.fill('#c-name', PART);
   await page.fill('#c-size', '400 × 150mm');
