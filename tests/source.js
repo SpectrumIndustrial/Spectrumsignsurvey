@@ -123,5 +123,16 @@ const stray = Object.keys(emitted).filter(k => !(k in ACTIONS) && !(k in NOT_ACT
 ck(stray.length === 0, 'every data- attribute is either an action or listed as not one'
    + (stray.length ? ` — ${stray.map(k => 'data-' + k).join(', ')}` : ''));
 
+/* A custom property that is referenced but never defined does not throw and
+   does not show up as an error — the declaration is simply dropped and the
+   element inherits whatever was above it. Three of them had got in, so the
+   colour a button was meant to be was quietly not applied. */
+const css = (src.match(/<style>([\s\S]*?)<\/style>/g) || []).join('\n') + src;
+const varsSet = new Set([...css.matchAll(/(--[a-z0-9-]+)\s*:/gi)].map(m => m[1]));
+const varsUsed = new Set([...css.matchAll(/var\((--[a-z0-9-]+)/gi)].map(m => m[1]));
+const varsMissing = [...varsUsed].filter(v => !varsSet.has(v));
+ck(varsMissing.length === 0, 'every CSS variable used is defined somewhere'
+   + (varsMissing.length ? ` — ${varsMissing.join(', ')}` : ` (${varsUsed.size} in use)`));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

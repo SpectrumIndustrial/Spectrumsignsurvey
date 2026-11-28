@@ -126,7 +126,7 @@ body{overflow:hidden}
 .zone-head .line{flex:1;height:1px;background:var(--rule)}
 
 .item{
-  background:var(--card);border:1px solid var(--rule);border-radius:13px;
+  background:var(--card);border:1px solid var(--rule);border-radius:16px;
   padding:12px 13px 10px;margin-bottom:8px;box-shadow:var(--shadow);
   border-left:3px solid transparent;transition:border-color .18s,box-shadow .18s
 }
@@ -220,15 +220,17 @@ body{overflow:hidden}
 .fchip svg{width:13px;height:13px;stroke-width:2.3}
 .count{font-size:12.5px;color:var(--ink-45);padding:10px 2px 8px;font-weight:500}
 .count b{color:var(--ink);font-weight:700}
+/* Blue, not the brand red: in this app red is a status — a sign that is
+   missing — so it cannot also mean "tap me". */
 .count .discsw{display:block;margin-top:2px;background:none;border:0;padding:8px 0;
-  font:inherit;color:var(--brand);font-weight:600;text-decoration:underline;
+  font:inherit;color:var(--blue);font-weight:600;text-decoration:underline;
   text-underline-offset:2px;min-height:40px;text-align:left}
 
 /* ---------- product rows ---------- */
 .prow{
-  background:var(--card);border:1px solid var(--rule);border-radius:11px;
+  background:var(--card);border:1px solid var(--rule);border-radius:12px;
   padding:12px 13px;margin-bottom:7px;display:flex;gap:11px;align-items:center;
-  box-shadow:var(--shadow);transition:transform .12s,border-color .15s;width:100%;text-align:left
+  box-shadow:var(--shadow);transition:background .1s,border-color .15s;width:100%;text-align:left
 }
 .prow:active{transform:scale(.988);border-color:var(--ink)}
 .prow-body{flex:1;min-width:0}
@@ -278,7 +280,7 @@ body{overflow:hidden}
 
 /* ---------- photos ---------- */
 .photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:10px}
-.photocard{background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.photocard{background:var(--card);border:1px solid var(--rule);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .photocard img{width:100%;height:120px;object-fit:cover;display:block;background:var(--rule-2)}
 @supports (aspect-ratio:4/3){.photocard img{height:auto;aspect-ratio:4/3;max-height:210px}}
 .photocard .pc-body{padding:9px 10px 10px}
@@ -342,7 +344,7 @@ body{overflow:hidden}
 .bar i{display:block;height:100%}
 .actionrow{display:grid;gap:8px;margin-top:6px}
 .btn{
-  padding:14px 18px;border-radius:11px;font-size:14.5px;font-weight:680;
+  padding:14px 18px;border-radius:12px;font-size:14.5px;font-weight:680;
   display:flex;align-items:center;justify-content:center;gap:9px;transition:all .15s;
   border:1.5px solid transparent
 }
@@ -360,7 +362,7 @@ body{overflow:hidden}
 }
 .overlay.on{display:flex;animation:fade .16s ease}
 .sheet{
-  background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;
+  background:var(--card);width:100%;max-width:520px;border-radius:22px 22px 0 0;
   padding:22px 18px calc(22px + env(safe-area-inset-bottom));
   box-shadow:var(--shadow-lg);animation:up .24s cubic-bezier(.22,1,.36,1);
   max-height:88vh;overflow-y:auto
@@ -370,7 +372,7 @@ body{overflow:hidden}
 .field{margin-bottom:14px}
 .field label{display:block;margin-bottom:6px}
 .field input,.field select{
-  width:100%;padding:13px 14px;border:1.5px solid var(--rule);border-radius:11px;font-size:16px;background:#FCFCFA
+  width:100%;padding:13px 14px;border:1.5px solid var(--rule);border-radius:12px;font-size:16px;background:#FCFCFA
 }
 .field input:focus,.field select:focus{outline:none;border-color:var(--ink);background:#fff}
 /* The browser's own arrow sits too tight on iOS, and 16px keeps it from
@@ -474,15 +476,25 @@ body{overflow:hidden}
 .btn.danger-solid{background:var(--red)}
 
 /* ---- area cards ---- */
-.arealist{margin-top:4px}
+/* One filled container with hairline separators inside it, the way a grouped
+   list is drawn on the phone — rather than a row of separate cards each with
+   its own border, shadow and gap, which is a web pattern and reads as one. */
+.arealist{
+  margin-top:4px;background:var(--card);border:1px solid var(--rule);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow)
+}
 .areacard{
   width:100%;display:flex;align-items:center;gap:10px;text-align:left;
-  background:var(--card);border:1px solid var(--rule);border-radius:13px;
-  padding:14px 13px;margin-bottom:9px;box-shadow:var(--shadow);
-  transition:border-color .15s,transform .12s;border-left:3px solid var(--rule)
+  background:transparent;border:0;border-radius:0;
+  padding:14px 15px 14px 13px;
+  transition:background .1s;border-left:3px solid transparent
 }
-.areacard:active{transform:scale(.99)}
-.areacard:hover{border-color:#C9C9C2}
+/* The separator starts clear of the status rail so the rail reads as one
+   continuous edge down the list, as a native list's does. */
+.areacard + .areacard{box-shadow:inset 0 1px 0 var(--rule-2)}
+/* Touch-down feedback: a native row greys the moment a finger lands on it. */
+.areacard:active{background:var(--rule-2)}
+@media (hover:hover){ .areacard:hover{background:var(--rule-2)} }
 .areacard.done{border-left-color:var(--green)}
 .areacard.compact{padding:12px 13px}
 .areacard-main{flex:1;min-width:0}
@@ -511,7 +523,7 @@ body{overflow:hidden}
    with the sign cards below it. */
 .linkline{
   display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:650;
-  color:var(--brand);padding:8px 2px;margin:-4px 0 10px;min-height:40px;
+  color:var(--blue);padding:8px 2px;margin:-4px 0 10px;min-height:40px;
   text-decoration:underline;text-underline-offset:3px
 }
 .linkline svg{width:14px;height:14px;stroke-width:2.4}
@@ -776,8 +788,15 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
 .moreblock{border-top:1px solid var(--rule);margin:2px 0 14px;padding-top:12px}
 .moreblock>summary{
   list-style:none;cursor:pointer;font-size:13px;font-weight:650;color:var(--ink-70);
-  display:flex;align-items:center;gap:7px;padding:2px 0 10px;-webkit-tap-highlight-color:transparent
+  display:flex;align-items:center;gap:7px;padding:9px 0 12px;min-height:40px;
+  -webkit-tap-highlight-color:transparent
 }
+.tipbtn{
+  flex:none;align-self:flex-start;font:inherit;font-size:12.5px;font-weight:680;
+  color:var(--blue);background:var(--card);border:1px solid var(--rule);
+  border-radius:10px;padding:8px 12px;min-height:36px;white-space:nowrap
+}
+.tipbtn:active{background:var(--rule-2)}
 .moreblock>summary::-webkit-details-marker{display:none}
 .moreblock>summary::before{
   content:"";width:7px;height:7px;flex:none;border-right:2px solid var(--ink-45);
@@ -840,6 +859,19 @@ html.dark .surveyrow.cur{border-color:var(--ink-45)}
   border:1px solid var(--rule);background:var(--card);transition:color .13s,border-color .13s
 }
 .zonebar button:hover{color:var(--ink);border-color:var(--ink-45)}
+/* The same grouped look for the Guide's zone and sign-set rows. */
+#zoneList,.setlist{
+  background:var(--card);border:1px solid var(--rule);border-radius:16px;
+  overflow:hidden;box-shadow:var(--shadow)
+}
+#zoneList .zoneblock,.setlist .zoneblock{
+  border:0;border-radius:0;margin:0;box-shadow:none;background:transparent
+}
+#zoneList .zoneblock + .zoneblock,.setlist .zoneblock + .zoneblock{
+  box-shadow:inset 0 1px 0 var(--rule-2)
+}
+.zoneblock>summary:active{background:var(--rule-2)}
+.prow:active,.preset:active,.thumb:active,.oline:active,.photocard:active{background:var(--rule-2)}
 .zoneblock{
   background:var(--card);border:1px solid var(--rule);border-radius:13px;
   margin-bottom:8px;box-shadow:var(--shadow);overflow:hidden
@@ -2326,8 +2358,10 @@ function renderSurvey() {
        +   '<div class="progress"><i style="width:' + prog + '%"></i></div>'
        + '</div>' + ic("chev") + '</button>';
   }
-  h += '<button class="addcard" id="addArea">' + ic("plus", 18) + 'Add area</button>';
+  /* Closed before the add button: it is an action, not one of the areas, and
+     inside the group it was clipped by the container's own rounded corners. */
   h += '</div>';
+  h += '<button class="addcard" id="addArea">' + ic("plus", 18) + 'Add area</button>';
   $("#s-survey").innerHTML = h;
 }
 
@@ -2970,7 +3004,8 @@ function renderReport() {
      + '</div>';
 
   /* per-area breakdown */
-  h += '<div class="sectionhead"><span class="eyebrow">By area</span><span class="line"></span></div>';
+  h += '<div class="sectionhead"><span class="eyebrow">By area</span><span class="line"></span></div>'
+     + '<div class="arealist">';
   for (var i = 0; i < S.areas.length; i++) {
     var a = S.areas[i], st = areaStats(a);
     h += '<button class="areacard compact' + (a.done ? " done" : "") + '" data-open="' + a.id + '">'
@@ -2987,6 +3022,7 @@ function renderReport() {
            ? ' · ' + a.photos.length + ' photo' + (a.photos.length > 1 ? "s" : "") : "")
        + '</div></div>' + ic("chev") + '</button>';
   }
+  h += '</div>';
 
   /* general survey note */
   h += '<div class="sectionhead" style="margin-top:24px"><span class="eyebrow">Survey notes</span><span class="line"></span></div>';
@@ -3430,6 +3466,7 @@ function guideSetsHtml() {
         + 'Not a legal list \u2014 a starting point, to be judged against what is actually '
         + 'in front of you. Any of these can be added to an area in one tap, from the '
         + 'area itself.</p></div>';
+  h += '<div class="setlist">';
   for (var i = 0; i < PRESETS.length; i++) {
     var pre = PRESETS[i];
     if (!pre.signs.length) continue;
@@ -3444,7 +3481,7 @@ function guideSetsHtml() {
     }
     h += '</ul></div></details>';
   }
-  return h;
+  return h + '</div>';
 }
 
 /* The correct-versus-superseded symbol sheet. It belongs on the walk-round
