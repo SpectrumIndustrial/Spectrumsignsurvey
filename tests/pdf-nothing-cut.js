@@ -66,7 +66,10 @@ const LONG = {
   await page.waitForTimeout(200);
   await page.fill('#f-contact', LONG.contact);
   await page.fill('#f-contactInfo', LONG.contactInfo);
-  await page.fill('#f-reseller', LONG.reseller);
+  /* not on the list, so it goes in as free text — which is also the case
+     most likely to run off the edge of the page */
+  await page.selectOption('#f-reseller', '__other');
+  await page.fill('#f-resellerOther', LONG.reseller);
   await page.fill('#f-resContact', LONG.resContact);
   await page.fill('#f-resInfo', LONG.resInfo);
   await page.click('#saveSetup');
@@ -177,6 +180,57 @@ const LONG = {
   ck(low.length === 0, 'nothing but the footer sits below the bottom margin'
      + (low.length ? ` — ${low.length} line(s)` : ''));
   ck(all.every(o => o.x >= 39), 'nothing starts left of the margin either');
+
+  /* ---- and the shape that let one through ----
+     Every survey above has at least one sign checked, so the line explaining
+     that an area carries no compliance figures never rendered — and the area
+     banner that follows was painting its grey bar straight over it. That is
+     the normal way this gets used: photos and parts, no compliance walk. */
+  console.log('\n--- a survey where nothing is checked anywhere ---');
+  await page.evaluate(() => { document.getElementById('overlay').classList.remove('on'); window.__grabbed = null; });
+  await page.click('#btnSurveys');
+  await page.waitForTimeout(600);
+  await page.click('#newSurvey');
+  await page.waitForTimeout(900);
+  await page.fill('#f-site', 'B & M, L24 8RJ');
+  await page.fill('#f-by', 'S. Yorke');
+  await page.click('#saveSetup');
+  await page.waitForTimeout(500);
+  for (const nm of ['Entrance gate/Carpark', 'Mez area', 'Goods in']) {
+    await page.click('#addArea');
+    await page.waitForSelector('#areaName');
+    await page.fill('#areaName', nm);
+    await page.click('#makeArea');
+    await page.waitForTimeout(500);
+    await page.click('.nav button[data-tab="photos"]');
+    await page.waitForTimeout(350);
+    await page.setInputFiles('#fileIn', { name: nm.replace(/\W/g, '') + '.jpg', mimeType: 'image/jpeg', buffer: jpg });
+    await page.waitForTimeout(800);
+    await page.locator('.photocard input').first().fill(
+      'Sound horn when exiting, beware vehicle operation — the panel has to go on the steelwork, not the blockwork');
+    await page.waitForTimeout(300);
+    await page.click('.nav button[data-tab="survey"]');
+    await page.waitForTimeout(300);
+    await page.click('#backAreas');
+    await page.waitForTimeout(300);
+  }
+  await page.click('.nav button[data-tab="report"]');
+  await page.waitForTimeout(600);
+  await page.click('#expPdf');
+  await page.waitForSelector('#fSave', { timeout: 40000 });
+  await page.evaluate(() => document.getElementById('fSave').click());
+  await page.waitForTimeout(2000);
+  const buf2 = Buffer.from(await page.evaluate(() => window.__grabbed));
+  fs.writeFileSync(path.join(OUT, 'nothing-cut-photos-only.pdf'), buf2);
+
+  const hid2 = lay.buried(buf2), over2 = lay.overflowing(buf2);
+  ck(hid2.length === 0, 'nothing is painted over when no area was sign-surveyed'
+     + (hid2.length ? ':\n' + hid2.map(o => `       p${o.page} ${JSON.stringify(o.s.slice(0, 66))}`).join('\n') : ''));
+  ck(over2.length === 0, 'and nothing runs past the margin either');
+  const r2 = lay.howMuchGotThrough(buf2, 'recorded for photos and products only');
+  ck(r2.whole, 'the line explaining why those areas carry no figures is readable');
+  ck(lay.howMuchGotThrough(buf2, 'Sound horn when exiting, beware vehicle operation').whole,
+     'and the photo descriptions arrive whole');
 
   console.log(`\n${pass} passed, ${fail} failed`);
   console.log(errs.length ? 'ERRORS:\n' + errs.join('\n') : 'no console errors');

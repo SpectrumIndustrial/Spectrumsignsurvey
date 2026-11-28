@@ -48,7 +48,7 @@ const check = (ok, msg) => { ok ? pass++ : fail++; console.log(`  ${ok ? 'ok  ' 
   await page.waitForTimeout(200);
   await page.fill('#f-contact', 'Evita Grant');
   await page.fill('#f-contactInfo', 'evita.grant@example.com');
-  await page.fill('#f-reseller', 'Arco');
+  await page.selectOption('#f-reseller', 'Arco');
   await page.fill('#f-resContact', 'Rob Chapman');
   await page.fill('#f-resInfo', '07860 909274');
   await page.click('#saveSetup');
@@ -56,6 +56,8 @@ const check = (ok, msg) => { ok ? pass++ : fail++; console.log(`  ${ok ? 'ok  ' 
   await page.click('#btnSetup');
   await page.waitForTimeout(400);
   check(await page.inputValue('#f-reseller') === 'Arco', 'reseller persisted');
+  check(await page.locator('#otherResWrap').evaluate(e => e.hidden),
+        'the free-text box stays out of the way for a re-seller on the list');
   check(await page.locator('.moreblock').first().evaluate(e => e.open), 'block opens when already filled');
   await page.evaluate(() => document.getElementById('overlay').classList.remove('on'));
 

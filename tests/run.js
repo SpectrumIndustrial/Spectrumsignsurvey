@@ -21,7 +21,8 @@ const SUITES = [
   ['Reported from site', 'site-feedback.js'],
   ['Settling, discontinued lines and unsurveyed areas', 'four-changes.js'],
   ['Editing a part pinned to a photo', 'edit-photo-parts.js'],
-  ['Nothing cut off in the PDF', 'pdf-nothing-cut.js']
+  ['Nothing cut off in the PDF', 'pdf-nothing-cut.js'],
+  ['Naming areas, the spreadsheet columns and re-seller codes', 'five-changes.js']
 ];
 
 function run(file) {

@@ -86,7 +86,7 @@ for (const m of src.matchAll(/data-([a-z]+)=/g)) emitted[m[1]] = (emitted[m[1]] 
 
 /* action name -> how many places in the source emit it */
 const ACTIONS = {
-  add: 1, addsign: 1, del: 1, delsign: 1, delsurvey: 1, editnote: 8, filter: 1,
+  add: 1, addset: 1, addsign: 1, del: 1, delsign: 1, delsurvey: 1, editnote: 8, filter: 1,
   find: 2, findpart: 1, gtab: 1, guideadd: 1, open: 2, openphoto: 1,
   opensurvey: 1, partdel: 1, partedit: 1, pdel: 1, pick: 2, place: 1, pq: 2,
   preset: 1, q: 2, set: 1
