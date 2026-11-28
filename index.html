@@ -85,7 +85,7 @@ body{overflow:hidden}
   overscroll-behavior:contain}
 .topbar{
   flex:none;order:1;z-index:40;color:var(--ink);
-  background:rgba(251,251,253,.8);
+  background:rgba(251,251,253,.92);
   -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
   border-bottom:1px solid rgba(0,0,0,.09);
   padding:calc(8px + env(safe-area-inset-top)) 18px 8px;
@@ -118,7 +118,11 @@ body{overflow:hidden}
 .nav{
   position:fixed;left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom));
   z-index:60;border-radius:980px;overflow:hidden;
-  background:rgba(251,251,253,.72);
+  /* .92, not the .72 this started at: the bar floats OVER the list, so at .72
+     a product name scrolling underneath reads straight through the tab labels
+     — and the blur that is supposed to hide it does not exist on every
+     browser. See the @supports block below for those. */
+  background:rgba(251,251,253,.92);
   backdrop-filter:saturate(180%) blur(28px);-webkit-backdrop-filter:saturate(180%) blur(28px);
   display:grid;grid-template-columns:repeat(5,1fr);
   box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 8px 30px rgba(0,0,0,.14),
@@ -737,17 +741,34 @@ html.dark .tipbar svg{color:#6FA6E0}
 html.dark .refbar,html.dark .ref,html.dark .pill.blue{background:#0F2138;color:#7FB4F5}
 html.dark .overlay{background:rgba(0,0,0,.6)}
 html.dark .nav{
-  background:rgba(40,40,42,.68);
+  background:rgba(40,40,42,.92);
   box-shadow:0 1px 0 rgba(255,255,255,.07) inset,0 8px 30px rgba(0,0,0,.6),
              0 0 0 1px rgba(255,255,255,.1)
 }
 html.dark .nav button.on::after{background:rgba(41,151,255,.2)}
-html.dark .topbar{background:rgba(22,22,23,.8);border-bottom-color:rgba(255,255,255,.12)}
+html.dark .topbar{background:rgba(22,22,23,.92);border-bottom-color:rgba(255,255,255,.12)}
 @media (min-width:768px){
   html.dark .nav{background:var(--card);border-bottom-color:var(--rule);box-shadow:none}
   html.dark .nav button.on::after{background:var(--link)}
 }
 html.dark .empty svg{color:var(--rule)}
+
+/* Safari has had backdrop-filter since 9 and Chrome since 76, so the phones
+   this is used on get the blurred material. Everything else — older Android
+   webviews, Firefox before 103, anything embedded — gets no blur at all, and
+   a 92%-opaque bar with no blur still shows a ghost of the list under it. So
+   those browsers get a solid bar instead. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .topbar{background:#fbfbfd}
+  html.dark .topbar{background:#161617}
+  /* only where the bar actually floats over the list — from 768px up it is a
+     plain row at the top with nothing behind it, and keeps its own colour. */
+  @media (max-width:767px){
+    .nav{background:#fbfbfd}
+    html.dark .nav{background:#28282a}
+  }
+}
+
 html.dark .photocard img{background:var(--rule-2)}
 
 /* ---- theme toggle button ---- */
